@@ -9,6 +9,7 @@
   var C = S.contact || {};
   var R = S.reseaux || {};
   var P = S.photos || {};
+  var REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- Utilitaires ----------
   function isTodo(v) {
@@ -35,7 +36,26 @@
   function setHTML(sel, html) { var el = $(sel); if (el) el.innerHTML = html; return el; }
   function hide(sel) { var el = $(sel); if (el) el.hidden = true; }
   // Espaces insécables (utiles à l'affichage) remis en espaces simples pour Google.
-  function plain(v) { return String(v).replace(/\u00a0/g, " "); }
+  function plain(v) { return String(v).replace(/ /g, " "); }
+
+  // ---------- Apparition au défilement ----------
+  // Chaque élément observé reçoit .is-visible en entrant dans l'écran ; le CSS fait le reste.
+  var io = "IntersectionObserver" in window && !REDUCE
+    ? new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px" })
+    : null;
+  function observe(el) { if (io) io.observe(el); else el.classList.add("is-visible"); }
+
+  // Découpe un titre en mots, qui montent un à un derrière un masque.
+  function splitWords(el) {
+    if (el.children.length || !el.textContent.trim()) return;
+    el.innerHTML = el.textContent.trim().split(/[ \t\n]+/).map(function (w, i) {
+      return '<span class="w"><span style="--wi:' + i + '">' + esc(w) + "</span></span>";
+    }).join(" ");
+  }
 
   // ---------- Données dérivées ----------
   var phones = (C.telephones || []).filter(function (t) { return ok(t.lien); });
@@ -99,9 +119,10 @@
     return { nom: cat.categorie, groups: groups };
   }).filter(function (c) { return c.groups.length; });
 
-  function renderItem(it) {
+  // `n` : rang de la ligne, pour l'apparition en cascade à l'ouverture d'un onglet.
+  function renderItem(it, n) {
     var prix = ok(it.prix) ? esc(it.prix) : (DRAFT ? show(it.prix) : "Sur demande");
-    return '<li class="menu-item"><span class="menu-name">' + show(it.nom) +
+    return '<li class="menu-item" style="--n:' + Math.min(n, 14) + '"><span class="menu-name">' + show(it.nom) +
       (ok(it.duree) ? '<span class="menu-duree">' + esc(it.duree) + "</span>" : "") +
       (it.detail && (DRAFT || ok(it.detail)) ? '<span class="menu-meta">' + show(it.detail) + "</span>" : "") +
       '</span><span class="menu-price">' + prix + "</span></li>";
@@ -122,6 +143,7 @@
     tab.textContent = cat.nom;
     tabs.appendChild(tab);
 
+    var n = 0;
     var panel = document.createElement("div");
     panel.className = "panel";
     panel.id = id;
@@ -132,7 +154,7 @@
     panel.innerHTML = '<h3 class="panel-title">' + esc(cat.nom) + "</h3>" + cat.groups.map(function (g) {
       return '<div class="menu-group">' +
         (g.titre ? '<h4 class="menu-group-title">' + esc(g.titre) + "</h4>" : "") +
-        '<ul class="menu">' + g.items.map(renderItem).join("") + "</ul></div>";
+        '<ul class="menu">' + g.items.map(function (it) { return renderItem(it, n++); }).join("") + "</ul></div>";
     }).join("");
     panels.appendChild(panel);
   });
@@ -176,9 +198,15 @@
     if (a) selectTab(document.getElementById("tab-cat-" + a.getAttribute("data-tab")));
   });
 
+  // Bande défilante : deux copies identiques pour une boucle sans couture.
+  var marqueeGroup = '<div class="marquee-group">' + cats.map(function (c) {
+    return '<span class="marquee-item">' + esc(c.nom) + "</span>";
+  }).join("") + "</div>";
+  setHTML("#marquee", marqueeGroup + marqueeGroup);
+
   setHTML("#note-tarifs", show(S.noteTarifs));
 
-  // ---------- Photos (repli décoratif tant que le fichier manque) ----------
+  // ---------- Photos ----------
   function addPhoto(el, src, alt, opts) {
     opts = opts || {};
     if (!src) { if (opts.onFail) opts.onFail(); return; }
@@ -191,32 +219,53 @@
     el.appendChild(img);
     img.src = src;
   }
+  // Accueil et salon gardent un fond décoratif si la photo manque ; le bandeau « marques » disparaît.
   $all("[data-photo]").forEach(function (el) {
     var key = el.getAttribute("data-photo");
-    addPhoto(el, P[key], "", { lazy: key !== "accueil" });
-  });
-
-  var gallery = $("#gallery");
-  function layoutGallery() {
-    var n = gallery.children.length;
-    gallery.classList.toggle("is-mosaic", n === 6); // mosaïque prévue pour 6 photos
-    if (!n && !DRAFT) { hide("#galerie"); hide("#nav-galerie"); }
-  }
-  (P.galerie || []).forEach(function (src, i) {
-    var fig = document.createElement("figure");
-    fig.className = "gallery-item photo-slot reveal";
-    fig.style.setProperty("--i", i % 3);
-    gallery.appendChild(fig);
-    addPhoto(fig, src, "Réalisation du " + S.nomOfficiel + " (" + (i + 1) + ")", {
-      lazy: true,
-      onFail: function () { if (!DRAFT) { fig.remove(); layoutGallery(); } },
+    addPhoto(el, P[key], "", {
+      lazy: key !== "accueil",
+      onFail: key === "marques" ? function () { hide("#marques"); } : null,
     });
   });
-  layoutGallery();
+
+  // Galerie : n'apparaît qu'avec les photos réellement présentes.
+  var gallery = $("#gallery");
+  var gallerySrcs = (P.galerie || []).filter(Boolean);
+  var galleryFound = [];
+  var galleryPending = gallerySrcs.length;
+  hide("#galerie");
+  hide("#nav-galerie");
+  function galleryDone() {
+    if (--galleryPending > 0) return;
+    var srcs = galleryFound.filter(Boolean);
+    if (!srcs.length) return;
+    srcs.forEach(function (src, i) {
+      var fig = document.createElement("figure");
+      fig.className = "gallery-item photo-slot reveal-img has-photo";
+      fig.style.setProperty("--i", i % 3);
+      var img = document.createElement("img");
+      img.alt = "Réalisation du " + S.nomOfficiel + " (" + (i + 1) + ")";
+      img.decoding = "async";
+      img.src = src;
+      fig.appendChild(img);
+      gallery.appendChild(fig);
+      observe(fig);
+    });
+    gallery.classList.toggle("is-mosaic", srcs.length === 6); // mosaïque prévue pour 6 photos
+    $("#galerie").hidden = false;
+    $("#nav-galerie").hidden = false;
+  }
+  gallerySrcs.forEach(function (src, i) {
+    var p = new Image();
+    if ("fetchPriority" in p) p.fetchPriority = "low";
+    p.onload = function () { galleryFound[i] = src; galleryDone(); };
+    p.onerror = galleryDone;
+    p.src = src;
+  });
 
   setHTML("#insta-cta", R.instagram
     ? link(R.instagram, "Suivre @" + esc(instaHandle || "instagram") + " sur Instagram", "link-line", true)
-    : (DRAFT ? 'Lien Instagram : <span class="todo">à compléter</span>' : ""));
+    : "");
 
   // ---------- Avis ----------
   var avis = (S.avis || []).filter(ok);
@@ -345,12 +394,14 @@
   document.head.appendChild(ldTag);
 
   // ---------- Menu mobile ----------
+  var header = $(".site-header");
   var toggle = $(".nav-toggle");
   var nav = $("#nav");
   function setMenu(open) {
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
     document.body.classList.toggle("menu-open", open);
+    if (open) header.classList.remove("is-hidden");
   }
   toggle.addEventListener("click", function () {
     setMenu(toggle.getAttribute("aria-expanded") !== "true");
@@ -365,23 +416,48 @@
   function onDesktop(e) { if (e.matches) setMenu(false); }
   if (desktop.addEventListener) desktop.addEventListener("change", onDesktop); else desktop.addListener(onDesktop);
 
-  // ---------- En-tête au défilement ----------
-  var header = $(".site-header");
-  function onScroll() { header.classList.toggle("is-scrolled", window.scrollY > 10); }
+  // ---------- En-tête : se retire en descendant, revient en remontant ; filet de progression ----------
+  var lastY = window.scrollY;
+  function onScroll() {
+    var y = window.scrollY;
+    header.classList.toggle("is-scrolled", y > 10);
+    if (y < 400 || document.body.classList.contains("menu-open")) {
+      header.classList.remove("is-hidden");
+      lastY = y;
+    } else if (Math.abs(y - lastY) > 10) {
+      header.classList.toggle("is-hidden", y > lastY);
+      lastY = y;
+    }
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    header.style.setProperty("--progress", max > 0 ? Math.min(1, y / max).toFixed(4) : "0");
+  }
   window.addEventListener("scroll", onScroll, { passive: true });
+  header.addEventListener("focusin", function () { header.classList.remove("is-hidden"); });
   onScroll();
 
-  // ---------- Apparition douce ----------
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var revealEls = $all(".reveal");
-  if ("IntersectionObserver" in window && !reduce) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); }
+  // ---------- Animations ----------
+  $all(".split").forEach(splitWords);
+  $all(".reveal, .reveal-img, .split, .eyebrow").forEach(observe);
+
+  // Parallaxe discret des grandes photos (ordinateur uniquement).
+  if (!REDUCE && window.matchMedia("(hover: hover) and (min-width: 761px)").matches) {
+    var layers = $all(".parallax");
+    var ticking = false;
+    var updateParallax = function () {
+      ticking = false;
+      var vh = window.innerHeight;
+      layers.forEach(function (el) {
+        var img = el.querySelector("img");
+        var r = el.getBoundingClientRect();
+        if (!img || r.bottom < 0 || r.top > vh) return;
+        var p = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); // -1 (haut) … 1 (bas)
+        img.style.translate = "0 " + (-p * r.height * 0.045).toFixed(1) + "px";
       });
-    }, { rootMargin: "0px 0px -6% 0px" });
-    revealEls.forEach(function (el) { io.observe(el); });
-  } else {
-    revealEls.forEach(function (el) { el.classList.add("is-visible"); });
+    };
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; window.requestAnimationFrame(updateParallax); }
+    }, { passive: true });
+    window.addEventListener("resize", updateParallax);
+    updateParallax();
   }
 })();

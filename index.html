@@ -12,7 +12,7 @@
   <meta property="og:site_name" content="Salon Jolie Vue">
   <meta property="og:title" content="Salon Jolie Vue — Institut de beauté à Oran">
   <meta property="og:description" content="Coiffure, soins, mise en beauté, onglerie, épilations et massages. Du samedi au jeudi, 9h30 – 17h30.">
-  <meta property="og:image" content="images/accueil.jpg">
+  <meta property="og:image" content="https://salonjolievue.com/images/accueil.jpg">
 
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +55,7 @@
         <div class="hero-inner">
           <div class="hero-text">
             <p class="eyebrow" data-fill="accroche"></p>
-            <h1 class="hero-title" data-fill="nom"></h1>
+            <h1 class="hero-title split" data-fill="nom"></h1>
             <p class="hero-slogan" data-fill="slogan"></p>
             <div class="hero-actions">
               <a class="btn" href="#rendez-vous">Prendre rendez-vous</a>
@@ -63,7 +63,10 @@
             </div>
           </div>
           <div class="hero-visual">
-            <div class="arch photo-slot" data-photo="accueil" aria-hidden="true"></div>
+            <svg class="arch-frame" viewBox="0 0 400 500" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M0.5 499.5V200A199.5 199.5 0 0 1 399.5 200V499.5Z" pathLength="1"/>
+            </svg>
+            <div class="arch photo-slot reveal-img parallax" data-photo="accueil" aria-hidden="true"></div>
           </div>
         </div>
         <div class="hero-info" id="hero-info"></div>
@@ -73,10 +76,10 @@
     <!-- LE SALON -->
     <section class="section" id="salon">
       <div class="wrap salon-grid">
-        <div class="salon-photo photo-slot reveal" data-photo="salon" aria-hidden="true"></div>
+        <div class="salon-photo photo-slot reveal-img parallax" data-photo="salon" aria-hidden="true"></div>
         <div class="reveal">
           <p class="eyebrow">Le salon</p>
-          <h2 class="section-title" data-fill="titreSalon"></h2>
+          <h2 class="section-title split" data-fill="titreSalon"></h2>
           <div class="prose" id="presentation"></div>
         </div>
       </div>
@@ -85,11 +88,16 @@
       </div>
     </section>
 
+    <!-- BANDE DÉFILANTE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track" id="marquee"></div>
+    </div>
+
     <!-- MANIFESTE -->
     <section class="manifesto">
       <div class="wrap manifesto-inner reveal">
         <p class="eyebrow eyebrow-center">Chez Jolie Vue</p>
-        <h2 class="manifesto-title" id="manifeste-titre"></h2>
+        <h2 class="manifesto-title split" id="manifeste-titre"></h2>
         <p class="manifesto-text" id="manifeste-texte"></p>
         <ul class="univers" id="univers" aria-label="Nos univers"></ul>
       </div>
@@ -100,7 +108,7 @@
       <div class="wrap">
         <div class="section-head reveal">
           <p class="eyebrow eyebrow-center">La carte</p>
-          <h2 class="section-title">Prestations &amp; tarifs</h2>
+          <h2 class="section-title split">Prestations &amp; tarifs</h2>
         </div>
         <div class="carte">
           <div class="tabs" role="tablist" aria-label="Catégories de prestations" id="tabs"></div>
@@ -110,12 +118,21 @@
       </div>
     </section>
 
+    <!-- NOS MARQUES -->
+    <section class="brand-band" id="marques" aria-labelledby="marques-titre">
+      <div class="brand-photo photo-slot reveal-img parallax" data-photo="marques" aria-hidden="true"></div>
+      <div class="wrap brand-caption">
+        <p class="eyebrow">Nos marques</p>
+        <h2 class="brand-title split" id="marques-titre" data-fill="marques"></h2>
+      </div>
+    </section>
+
     <!-- GALERIE -->
     <section class="section section-alt" id="galerie">
       <div class="wrap">
         <div class="section-head reveal">
           <p class="eyebrow eyebrow-center">Réalisations</p>
-          <h2 class="section-title">Galerie</h2>
+          <h2 class="section-title split">Galerie</h2>
         </div>
         <div class="gallery" id="gallery"></div>
         <p class="center" id="insta-cta"></p>
@@ -127,7 +144,7 @@
       <div class="wrap">
         <div class="section-head reveal">
           <p class="eyebrow eyebrow-center">Avis</p>
-          <h2 class="section-title">Elles sont passées chez nous</h2>
+          <h2 class="section-title split">Elles sont passées chez nous</h2>
         </div>
         <div class="reviews" id="reviews"></div>
       </div>
@@ -137,7 +154,7 @@
     <section class="section booking" id="rendez-vous">
       <div class="wrap booking-inner reveal">
         <p class="eyebrow eyebrow-center">Rendez-vous</p>
-        <h2 class="section-title">Réservez votre moment</h2>
+        <h2 class="section-title split">Réservez votre moment</h2>
         <p class="booking-lead" id="booking-lead"></p>
         <div class="booking-phones" id="booking-phones"></div>
         <div class="booking-actions" id="booking-actions"></div>
@@ -149,7 +166,7 @@
       <div class="wrap infos-grid">
         <div class="reveal">
           <p class="eyebrow">Infos pratiques</p>
-          <h2 class="section-title">Nous trouver</h2>
+          <h2 class="section-title split">Nous trouver</h2>
           <dl class="contact-list" id="contact-list"></dl>
         </div>
         <div class="reveal">

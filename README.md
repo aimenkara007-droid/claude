@@ -12,7 +12,22 @@ js/main.js        genera la página a partir de content.js (no hace falta tocarl
 images/           fotos, logo y favicon
 ```
 
-Secciones: portada · le salon · manifiesto · la carte (prestaciones y precios por pestañas) · galería · opiniones · rendez-vous · infos pratiques (dirección, teléfonos, horario con el día de hoy resaltado según la hora de Orán, mapa) · pie. En móvil hay una barra fija abajo con «Appeler» y «Message» (Instagram).
+Secciones: portada · le salon · banda en movimiento · manifiesto · la carte (prestaciones y precios por pestañas) · nos marques · galería · opiniones · rendez-vous · infos pratiques (dirección, teléfonos, horario con el día de hoy resaltado según la hora de Orán, mapa) · pie. En móvil hay una barra fija abajo con «Appeler» y «Message» (Instagram).
+
+## Animaciones
+
+Sobrias y lentas, en `css/styles.css` y al final de `js/main.js`:
+
+- **Portada:** el nombre sube palabra a palabra, la foto se descubre de abajo arriba (efecto telón) y el arco dorado se dibuja solo.
+- **Títulos:** suben palabra a palabra al entrar en pantalla. Las fotos se descubren con el mismo efecto telón y tienen un parallax discreto (solo en ordenador).
+- **Detalles:**
+  - Los filetes dorados de las etiquetas se trazan al aparecer.
+  - La banda de especialidades desfila despacio y se detiene al pasar el ratón.
+  - El relleno de los botones barre de izquierda a derecha.
+  - Los precios aparecen en cascada al cambiar de pestaña.
+- **Cabecera:** se oculta al bajar, reaparece al subir y muestra una línea dorada de progreso de lectura.
+
+Si el visitante tiene activado «reducir movimiento» en su sistema, todo se muestra directamente, sin animaciones.
 
 ## Editar el contenido
 
@@ -33,9 +48,10 @@ Se copian en `images/` con estos nombres exactos:
 | `logo.png` | cabecera y pie (en el pie se invierte a blanco) | PNG con fondo transparente, logo en negro |
 | `accueil.jpg` | foto grande en arco, junto al título | vertical, ~1200×1500 |
 | `salon.jpg` | sección «Le salon» | vertical, ~1200×1500 |
+| `marques.jpg` | banda panorámica «Nos marques» | horizontal, ~2000×1000 |
 | `galerie-1.jpg` … `galerie-6.jpg` | galería en mosaico | 1, 3 y 4 verticales; el resto, cuadradas o verticales |
 
-- **Si falta una foto:** se muestra un fondo decorativo neutro en su lugar.
+- **Si falta una foto:** en la portada y en «Le salon» se muestra un fondo decorativo neutro; la banda de marcas y la galería se ocultan (la galería aparece sola en cuanto hay al menos una foto).
 - **Si falta el logo:** se muestra el nombre en texto («Institut de beauté / Jolie Vue»).
 - **Calidad:** conviene usar las fotos originales, no capturas de Instagram (esas tienen el texto superpuesto y poca resolución). Hay que comprimirlas a menos de 300 KB cada una, por ejemplo con squoosh.app.
 

@@ -32,9 +32,12 @@ window.SALON = {
   // Trois points forts affichés sous la présentation.
   pointsForts: [
     { titre: "Tout en un seul lieu", texte: "Coiffure, soins du visage, maquillage, onglerie, épilations et massages." },
-    { titre: "Des produits de qualité", texte: "Des produits professionnels, pour des résultats à la hauteur de vos attentes." },
+    { titre: "Des produits de qualité", texte: "Kérastase et L’Oréal Professionnel, pour des résultats à la hauteur de vos attentes." },
     { titre: "Un cadre raffiné", texte: "Un espace spacieux et élégant, dédié à la détente, sur la frange maritime d’Oran." },
   ],
+
+  // Bandeau photo « Nos marques » (photo : photos.marques).
+  marques: "Kérastase · L’Oréal Professionnel",
 
   // Grande phrase sur fond sombre.
   manifeste: {
@@ -246,13 +249,14 @@ window.SALON = {
 
   /*
    * PHOTOS — déposez les fichiers dans le dossier images/ avec ces noms.
-   * Tant qu'un fichier manque, un fond décoratif s'affiche à sa place
-   * (hors brouillon, les photos de galerie manquantes sont masquées).
+   * Accueil et salon : tant que le fichier manque, un fond décoratif
+   * s'affiche à sa place. Marques et galerie : ce qui manque est masqué.
    */
   photos: {
     logo: "images/logo.png",                // logo (fond transparent de préférence) — sinon le nom s'affiche en texte
     accueil: "images/accueil.jpg",          // grande photo en arche, à côté du titre (verticale)
     salon: "images/salon.jpg",              // intérieur du salon
+    marques: "images/marques.jpg",          // bandeau panoramique « Nos marques »
     galerie: [
       "images/galerie-1.jpg",
       "images/galerie-2.jpg",
