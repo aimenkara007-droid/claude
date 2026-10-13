@@ -73,12 +73,40 @@ window.NS = {
     { id: "v-chauffeur", marque: "Mercedes-Benz", modele: "V-Class", type: "van", photo: "images/chauffeur/classe-v.jpg" },
   ],
 
-  // Destinations (noms traduits dans js/i18n → destinations.names), en deux rangées défilantes.
+  // Destinations, en deux rangées défilantes. Un clic ouvre leur fiche.
+  // Nom et description : js/i18n → destinations.names / destinations.desc.
+  // pays : code ISO à deux lettres, nom traduit automatiquement (null = ne pas l'afficher, ex. ville-État).
+  // saison : meilleurs mois [début, fin], de 1 à 12 (null = toute l'année).
   destinations: [
-    "paris", "saint-tropez", "monaco", "cannes", "courchevel", "gstaad", "geneve", "londres", "milan", "rome",
-    "porto-cervo", "mykonos", "ibiza", "palma", "saint-barthelemy",
-    "new-york", "miami", "los-angeles", "tulum", "mexico", "rio", "florianopolis", "punta-del-este",
-    "le-cap", "phuket", "singapour", "hong-kong", "shanghai", "tokyo",
+    { id: "paris", pays: "FR", saison: null },
+    { id: "saint-tropez", pays: "FR", saison: [5, 9] },
+    { id: "monaco", pays: null, saison: null },
+    { id: "cannes", pays: "FR", saison: [5, 9] },
+    { id: "courchevel", pays: "FR", saison: [12, 4] },
+    { id: "gstaad", pays: "CH", saison: [12, 3] },
+    { id: "geneve", pays: "CH", saison: null },
+    { id: "londres", pays: "GB", saison: null },
+    { id: "milan", pays: "IT", saison: null },
+    { id: "rome", pays: "IT", saison: [4, 10] },
+    { id: "porto-cervo", pays: "IT", saison: [6, 9] },
+    { id: "mykonos", pays: "GR", saison: [6, 9] },
+    { id: "ibiza", pays: "ES", saison: [6, 9] },
+    { id: "palma", pays: "ES", saison: [5, 10] },
+    { id: "saint-barthelemy", pays: null, saison: [12, 4] },
+    { id: "new-york", pays: "US", saison: null },
+    { id: "miami", pays: "US", saison: [11, 4] },
+    { id: "los-angeles", pays: "US", saison: null },
+    { id: "tulum", pays: "MX", saison: [11, 4] },
+    { id: "mexico", pays: "MX", saison: [11, 4] },
+    { id: "rio", pays: "BR", saison: [12, 3] },
+    { id: "florianopolis", pays: "BR", saison: [12, 3] },
+    { id: "punta-del-este", pays: "UY", saison: [12, 2] },
+    { id: "le-cap", pays: "ZA", saison: [11, 3] },
+    { id: "phuket", pays: "TH", saison: [11, 4] },
+    { id: "singapour", pays: null, saison: null },
+    { id: "hong-kong", pays: null, saison: [10, 12] },
+    { id: "shanghai", pays: "CN", saison: [9, 11] },
+    { id: "tokyo", pays: "JP", saison: [3, 5] },
   ],
 
   // Adresses mises en avant par la conciergerie (noms propres, non traduits).
@@ -89,16 +117,18 @@ window.NS = {
   ],
 
   // Jets privés et yachts (noms de modèles, non traduits). photo: null = carte sans photo.
+  // Description : js/i18n → jets.desc.<id>. Caractéristiques indicatives, à valider avec le client :
+  // jets → passagers (maximum) et autonomieKm ; yachts → longueurM.
   jets: [
-    { nom: "Gulfstream GV", type: "jet", photo: "images/jets/gulfstream-gv.jpg" },
-    { nom: "Cessna Citation CJ3", type: "jet", photo: "images/jets/cessna-cj3.jpg" },
-    { nom: "Falcon 200", type: "jet", photo: null },
-    { nom: "Princess 115", type: "yacht", photo: "images/yachts/princess-115.jpg" },
-    { nom: "Mangusta 105", type: "yacht", photo: "images/yachts/mangusta-105.jpg" },
-    { nom: "Riva 100", type: "yacht", photo: "images/yachts/riva-100.jpg" },
-    { nom: "Sunseeker Predator 92", type: "yacht", photo: "images/yachts/sunseeker-predator-92.jpg" },
-    { nom: "Pershing 90", type: "yacht", photo: "images/yachts/pershing-90.jpg" },
-    { nom: "Azimut 68S", type: "yacht", photo: "images/yachts/azimut-68s.jpg" },
+    { id: "gulfstream-gv", nom: "Gulfstream GV", type: "jet", passagers: 16, autonomieKm: 12000, photo: "images/jets/gulfstream-gv.jpg" },
+    { id: "cessna-cj3", nom: "Cessna Citation CJ3", type: "jet", passagers: 7, autonomieKm: 3500, photo: "images/jets/cessna-cj3.jpg" },
+    { id: "falcon-200", nom: "Falcon 200", type: "jet", passagers: 9, autonomieKm: 4500, photo: null },
+    { id: "princess-115", nom: "Princess 115", type: "yacht", longueurM: 35, photo: "images/yachts/princess-115.jpg" },
+    { id: "mangusta-105", nom: "Mangusta 105", type: "yacht", longueurM: 32, photo: "images/yachts/mangusta-105.jpg" },
+    { id: "riva-100", nom: "Riva 100", type: "yacht", longueurM: 30, photo: "images/yachts/riva-100.jpg" },
+    { id: "predator-92", nom: "Sunseeker Predator 92", type: "yacht", longueurM: 28, photo: "images/yachts/sunseeker-predator-92.jpg" },
+    { id: "pershing-90", nom: "Pershing 90", type: "yacht", longueurM: 27, photo: "images/yachts/pershing-90.jpg" },
+    { id: "azimut-68s", nom: "Azimut 68S", type: "yacht", longueurM: 21, photo: "images/yachts/azimut-68s.jpg" },
   ],
 
   // Cartes de membre présentées sur l'ancien site.

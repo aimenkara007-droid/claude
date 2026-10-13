@@ -43,6 +43,12 @@ Dans l'ordre de la page :
 15. **Contact.**
 16. **Pied de page** et **mentions légales.**
 
+**Fiches détaillées.** Un clic sur une voiture (location ou chauffeur), une destination, un jet ou un yacht ouvre sa fiche :
+- grande photo, description, caractéristiques ;
+- bouton qui pré-remplit le formulaire de réservation (modèle choisi, ou « Destination : Monaco », « Yacht : Riva 100 ») ;
+- pour les voitures, bouton « Voir en 3D » qui affiche la silhouette correspondante dans le showroom ;
+- passage à la fiche suivante avec les flèches, le clavier ou en glissant le doigt ; fermeture avec la croix, Échap ou un clic à côté.
+
 Toutes les animations respectent le réglage « réduire les animations » du système du visiteur.
 
 Le curseur doré et l'effet de relief au survol n'apparaissent que sur ordinateur, avec une souris.
@@ -78,9 +84,15 @@ Le curseur doré et l'effet de relief au survol n'apparaissent que sur ordinateu
   - `prix: null` affiche « Sur demande ».
   - La description se trouve dans chaque fichier de langue, sous `fleet.cars.<id>`.
 - **Avec chauffeur :** `chauffeurs`, dont `type` vaut `"sedan"`, `"suv"` ou `"van"`.
-- **Destinations :** `destinations` (identifiant + photo). Les noms traduits sont sous `destinations.names` dans chaque langue.
+- **Destinations :** `destinations`, une ligne par destination.
+  - `pays` : code ISO à deux lettres (`"FR"`, `"US"`…). Le navigateur affiche le nom du pays dans la langue du visiteur. `null` pour ne rien afficher (Monaco, Singapour…).
+  - `saison` : meilleurs mois `[début, fin]`, de 1 à 12 (`[12, 4]` = décembre – avril) ; `null` = toute l'année.
+  - La photo est `images/destinations/<id>.jpg`. Le nom et la description sont dans chaque langue, sous `destinations.names` et `destinations.desc`.
 - **Hôtels :** `hotels`.
 - **Jets et yachts :** `jets`. `type` vaut `"jet"` ou `"yacht"` ; avec `photo: null`, un emblème remplace la photo.
+  - Caractéristiques de la fiche : `passagers` et `autonomieKm` pour un jet, `longueurM` pour un yacht. Une valeur absente n'est pas affichée.
+  - La description est dans chaque langue, sous `jets.desc.<id>`.
+- **Descriptions des voitures :** le texte court de la carte est sous `fleet.cars.<id>`, le texte long de la fiche sous `fleet.more.<id>`. Pour les voitures avec chauffeur : `chauffeur.more.<id>`.
 - **Cartes du club :** `cartes`.
 - **Témoignages :** `temoignages`, cités en anglais comme sur l'ancien site.
 - **Teintes du showroom :** `peintures`.
@@ -118,7 +130,10 @@ Pour une meilleure qualité, il suffit de remplacer chaque fichier par l'origina
   - nombre de places du CLS (4 supposé) ;
   - tarifs éventuels.
 - [ ] **Club :** avantages des cartes Premium, Gold et Black.
-- [ ] **Jets :** photo du Falcon 200 (absente de l'ancien site).
+- [ ] **Jets et yachts :**
+  - photo du Falcon 200 (absente de l'ancien site) ;
+  - caractéristiques des fiches, données à titre indicatif d'après les modèles : passagers et autonomie des jets, longueur des yachts. À confirmer selon les appareils et les yachts que le client propose vraiment.
+- [ ] **Destinations :** meilleures saisons et descriptions, rédigées comme des propositions.
 - [ ] **Photos :**
   - originaux en haute définition ;
   - la photo « Mykonos » de l'ancien site montre Santorin ;

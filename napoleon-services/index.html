@@ -404,6 +404,20 @@
     </div>
   </dialog>
 
+  <!-- Fiche détaillée : destination, voiture, jet ou yacht (remplie par main.js) -->
+  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+    <div class="sheet-panel" id="sheet-panel">
+      <button type="button" class="sheet-close" id="sheet-close" data-t-attr="aria-label:sheet.close" autofocus><span aria-hidden="true"></span></button>
+      <div class="sheet-media photo-slot" id="sheet-media"></div>
+      <div class="sheet-body" id="sheet-body"></div>
+      <div class="sheet-nav" id="sheet-nav">
+        <button type="button" class="sheet-arrow" data-sheet-step="-1" data-t-attr="aria-label:sheet.prev"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></button>
+        <span class="sheet-count" id="sheet-count"></span>
+        <button type="button" class="sheet-arrow" data-sheet-step="1" data-t-attr="aria-label:sheet.next"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Barre d'action fixe sur mobile -->
   <div class="mobile-bar" id="mobile-bar"></div>
 

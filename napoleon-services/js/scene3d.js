@@ -1191,7 +1191,8 @@
     function frame() {
       var dt = Math.min(clock.getDelta(), 0.1);
       time += dt;
-      if (!document.hidden) {
+      // Rien à calculer quand l'onglet est caché ou qu'une fiche couvre la page.
+      if (!document.hidden && !document.documentElement.classList.contains("modal-open")) {
         stages.forEach(function (s) {
           if (!s.visible) return;
           s.resize();

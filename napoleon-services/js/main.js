@@ -62,6 +62,8 @@
     try { rule = new Intl.PluralRules(intl()).select(n); } catch (e) { /* navigateur ancien */ }
     return (forms[rule] || forms.other).replace("{n}", n);
   }
+  // « Libellé : valeur » selon la typographie de la langue.
+  function sep() { return lang === "fr" ? " : " : /^zh/.test(L.htmlLang) ? "：" : ": "; }
   function fmtNumber(n) {
     try { return new Intl.NumberFormat(intl()).format(n); } catch (e) { return String(n); }
   }
@@ -76,7 +78,7 @@
   function emit(name, detail) { document.dispatchEvent(new CustomEvent(name, { detail: detail })); }
   // Nom de modèle, éventuellement traduit (« S-Class » → « Classe S »).
   function modelName(m) {
-    var map = t("fleet.modelNames") || {};
+    var map = get(L, "fleet.modelNames") || {}; // sans repli sur le français : les autres langues gardent le nom international
     return String(m).split(" · ").map(function (part) { return map[part] || part; }).join(" · ");
   }
 
@@ -368,6 +370,16 @@
     }).join(""));
   }
 
+  // Bouton invisible qui couvre une carte et ouvre sa fiche ; « copy » = doublon décoratif (bandeau défilant).
+  function cardCover(kind, index, name, copy) {
+    return '<button type="button" class="card-cover" data-sheet="' + kind + '" data-index="' + index + '"' +
+      (copy ? ' tabindex="-1"' : "") + ' aria-label="' + esc(name + " — " + t("sheet.open")) + '"></button>';
+  }
+  function cardMore(compact) {
+    return '<span class="card-more' + (compact ? " is-compact" : "") + '" aria-hidden="true"><i></i>' + (compact ? "" : esc(t("sheet.open"))) + "</span>";
+  }
+  function destName(id) { return (t("destinations.names") || {})[id] || id; }
+
   function renderFleet() {
     var cats = CAT_ORDER.filter(function (c) { return cars.some(function (car) { return car.categorie === c; }); });
     setHTML("#fleet-filters", ["all"].concat(cats).map(function (c) {
@@ -383,8 +395,9 @@
       specs.push("<li>" + esc(t("fleet.chauffeur")) + "</li>");
       var name = modelName(car.modele);
       return '<article class="car reveal" data-cat="' + esc(car.categorie) + '" data-tilt style="--i:' + (i % 3) + '">' +
+        cardCover("car", i, car.marque + " " + name) +
         '<div class="car-media photo-slot" data-src="' + esc(car.photo || "") + '" data-alt="' + esc(car.marque + " " + name) + '">' +
-          '<span class="car-ghost" aria-hidden="true">' + esc(car.embleme || car.modele) + "</span>" +
+          '<span class="car-ghost" aria-hidden="true">' + esc(car.embleme || car.modele) + "</span>" + cardMore() +
         "</div>" +
         '<div class="car-body">' +
           '<p class="car-brand">' + ltr(esc(car.marque)) + "</p>" +
@@ -419,8 +432,8 @@
     }).join(""));
     setHTML("#chauffeur-fleet", chauffeurs.map(function (c, i) {
       var name = modelName(c.modele);
-      return '<li class="cf-car reveal" data-tilt style="--i:' + i + '">' +
-        '<div class="cf-media photo-slot" data-src="' + esc(c.photo) + '" data-alt="' + esc(c.marque + " " + name) + '"></div>' +
+      return '<li class="cf-car reveal" data-tilt style="--i:' + i + '">' + cardCover("cf", i, c.marque + " " + name) +
+        '<div class="cf-media photo-slot" data-src="' + esc(c.photo) + '" data-alt="' + esc(c.marque + " " + name) + '">' + cardMore() + "</div>" +
         '<div class="cf-body"><span class="cf-type">' + esc(t("fleet.cat." + c.type)) + "</span>" +
         '<h4 class="cf-name">' + ltr(esc(name)) + "</h4>" +
         '<span class="cf-brand">' + ltr(esc(c.marque)) + "</span></div></li>";
@@ -430,17 +443,20 @@
 
   // Destinations : deux rangées qui défilent en sens contraire (deux copies chacune).
   function renderDestinations() {
-    var ids = S.destinations || [], names = t("destinations.names") || {};
-    var half = Math.ceil(ids.length / 2);
-    var rows = [ids.slice(0, half), ids.slice(half)];
+    var list = S.destinations || [];
+    var half = Math.ceil(list.length / 2);
+    var rows = [list.slice(0, half), list.slice(half)];
     setHTML("#dest-rows", rows.map(function (row, r) {
-      var tiles = row.map(function (id) {
-        var name = names[id] || id;
-        return '<figure class="dest"><div class="dest-media photo-slot" data-src="images/destinations/' + esc(id) + '.jpg" data-alt="' + esc(name) + '"></div>' +
-          "<figcaption>" + esc(name) + "</figcaption></figure>";
-      }).join("");
+      function tiles(copy) {
+        return row.map(function (d, k) {
+          var name = destName(d.id);
+          return '<figure class="dest">' + cardCover("dest", r * half + k, name, copy) +
+            '<div class="dest-media photo-slot" data-src="images/destinations/' + esc(d.id) + '.jpg" data-alt="' + esc(name) + '">' + cardMore(true) + "</div>" +
+            "<figcaption>" + esc(name) + "</figcaption></figure>";
+        }).join("");
+      }
       return '<div class="dest-row' + (r ? " is-reverse" : "") + '"><div class="dest-track">' +
-        '<div class="dest-group">' + tiles + '</div><div class="dest-group" aria-hidden="true">' + tiles + "</div></div></div>";
+        '<div class="dest-group">' + tiles(false) + '</div><div class="dest-group" aria-hidden="true">' + tiles(true) + "</div></div></div>";
     }).join(""));
     photoSlots($("#dest-rows"));
     setHTML("#hotels", (S.hotels || []).map(function (h, i) {
@@ -455,9 +471,9 @@
     var list = S.jets || [];
     setHTML("#hscroll-track", list.map(function (j, i) {
       var media = j.photo
-        ? '<div class="hs-media photo-slot" data-src="' + esc(j.photo) + '" data-alt="' + esc(j.nom) + '"></div>'
-        : '<div class="hs-media hs-ghost"><span>' + esc(j.nom) + "</span></div>";
-      return '<article class="hs-card">' + media +
+        ? '<div class="hs-media photo-slot" data-src="' + esc(j.photo) + '" data-alt="' + esc(j.nom) + '">' + cardMore() + "</div>"
+        : '<div class="hs-media hs-ghost"><span>' + esc(j.nom) + "</span>" + cardMore() + "</div>";
+      return '<article class="hs-card">' + cardCover("jet", i, j.nom) + media +
         '<div class="hs-caption"><span class="hs-index">' + ("0" + (i + 1)).slice(-2) + " / " + ("0" + list.length).slice(-2) + "</span>" +
         '<span class="hs-type">' + esc(t("jets.types." + j.type)) + "</span>" +
         '<h3 class="hs-name">' + ltr(esc(j.nom)) + "</h3></div></article>";
@@ -560,8 +576,7 @@
     var f = function (id) { return ($("#" + id).value || "").trim(); };
     var car = cars.concat(chauffeurs).filter(function (c) { return c.id === f("f-vehicle"); })[0];
     var lines = [t("booking.mail.intro"), ""];
-    var sep = lang === "fr" ? " : " : /^zh/.test(L.htmlLang) ? "：" : ": ";
-    function add(label, value) { if (value) lines.push(label + sep + value); }
+    function add(label, value) { if (value) lines.push(label + sep() + value); }
     add(t("booking.fields.name"), f("f-name"));
     add(t("booking.fields.phone"), f("f-phone"));
     add(t("booking.fields.email"), f("f-email"));
@@ -770,6 +785,7 @@
     renderMobileBar();
     renderLegal();
     renderLD();
+    if (sheetState) renderSheet(false);
     $all(".reveal, .reveal-img, .split, .eyebrow").forEach(observe);
     if (root.classList.contains("intro-done")) $all(".hero .split, .hero .eyebrow").forEach(function (el) { el.classList.add("is-visible"); });
     firstRender = false;
@@ -860,9 +876,217 @@
   // Mentions légales.
   var legal = $("#legal");
   $("#open-legal").addEventListener("click", function () {
+    root.classList.add("modal-open");
     if (legal.showModal) legal.showModal(); else legal.setAttribute("open", "");
   });
   legal.addEventListener("click", function (e) { if (e.target === legal) legal.close(); });
+  legal.addEventListener("close", function () { root.classList.remove("modal-open"); });
+
+  // ---------- Fiches détaillées : destinations, voitures, chauffeur, jets et yachts ----------
+  var sheet = $("#sheet"), sheetPanel = $("#sheet-panel"), sheetState = null;
+  function sheetList(kind) {
+    return kind === "dest" ? (S.destinations || []) : kind === "car" ? cars : kind === "cf" ? chauffeurs : (S.jets || []);
+  }
+  function upperFirst(str) {
+    try { return str.charAt(0).toLocaleUpperCase(intl()) + str.slice(1); } catch (e) { return str; }
+  }
+  // Nom du pays traduit par le navigateur (« FR » → France, Франция, 法国…).
+  function countryName(code) {
+    if (!code || !window.Intl || !Intl.DisplayNames) return "";
+    try { return new Intl.DisplayNames([intl()], { type: "region" }).of(code) || ""; } catch (e) { return ""; }
+  }
+  function monthName(m) {
+    try { return new Intl.DateTimeFormat(intl(), { month: "long" }).format(new Date(2026, m - 1, 15)); } catch (e) { return String(m); }
+  }
+  function withUnit(n, unit) {
+    try { return new Intl.NumberFormat(intl(), { style: "unit", unit: unit, maximumFractionDigits: 0 }).format(n); }
+    catch (e) { return fmtNumber(n) + (unit === "kilometer" ? " km" : " m"); }
+  }
+  function fact(label, value) { return value ? "<div><dt>" + esc(label) + "</dt><dd>" + value + "</dd></div>" : ""; }
+  function sheetButton(action, label, primary) {
+    return '<button type="button" class="btn btn-small magnetic ' + (primary ? "btn-gold" : "btn-ghost") + '" data-sheet-action="' + action + '">' +
+      esc(label) + (primary ? icon("arrow", "icon icon-sm") : "") + "</button>";
+  }
+
+  function renderSheet(animate) {
+    var kind = sheetState.kind, list = sheetList(kind), item = list[sheetState.index];
+    if (!item) return;
+    var kicker, title, lead = "", text = "", facts = [], note = "", actions = [], photo = item.photo, ghost = "";
+    if (kind === "dest") {
+      title = esc(destName(item.id));
+      kicker = esc(countryName(item.pays) || t("destinations.prefill"));
+      text = t("destinations.desc." + item.id);
+      photo = "images/destinations/" + item.id + ".jpg";
+      facts.push(fact(t("destinations.season"), esc(item.saison
+        ? upperFirst(monthName(item.saison[0])) + " – " + monthName(item.saison[1])
+        : t("destinations.allYear"))));
+      actions.push(sheetButton("book", t("destinations.cta"), true));
+    } else if (kind === "car" || kind === "cf") {
+      title = ltr(esc(modelName(item.modele)));
+      kicker = ltr(esc(item.marque));
+      ghost = item.embleme || item.modele;
+      if (kind === "car") {
+        lead = t("fleet.cars." + item.id);
+        text = t("fleet.more." + item.id);
+        facts.push(fact(t("fleet.labels.category"), esc(t("fleet.cat." + item.categorie))));
+        if (typeof item.places === "number") facts.push(fact(t("fleet.labels.seats"), esc(fmtNumber(item.places))));
+        facts.push(fact(t("fleet.labels.formula"), esc(t("fleet.chauffeur"))));
+        facts.push(fact(t("fleet.price"), esc(ok(item.prix) ? item.prix : t("fleet.onRequest"))));
+        actions.push(sheetButton("book", t("fleet.cta"), true));
+        if (root.classList.contains("has-3d")) actions.push(sheetButton("3d", t("fleet.view3d")));
+      } else {
+        text = t("chauffeur.more." + item.id);
+        facts.push(fact(t("fleet.labels.category"), esc(t("fleet.cat." + item.type))));
+        facts.push(fact(t("fleet.labels.formula"), esc(t("booking.services.chauffeur"))));
+        actions.push(sheetButton("book", t("chauffeur.cta"), true));
+      }
+    } else {
+      title = ltr(esc(item.nom));
+      kicker = esc(t("jets.types." + item.type));
+      ghost = item.nom;
+      text = t("jets.desc." + item.id);
+      if (item.passagers) facts.push(fact(t("jets.facts.passengers"), esc(plural(t("jets.upTo"), fmtNumber(item.passagers)))));
+      if (item.autonomieKm) facts.push(fact(t("jets.facts.range"), esc("≈ " + withUnit(item.autonomieKm, "kilometer"))));
+      if (item.longueurM) facts.push(fact(t("jets.facts.length"), esc("≈ " + withUnit(item.longueurM, "meter"))));
+      if (item.type === "yacht") facts.push(fact(t("jets.facts.crew"), esc(t("jets.crewIncluded"))));
+      note = t("jets.note");
+      actions.push(sheetButton("book", t("jets.cta"), true));
+    }
+
+    var media = $("#sheet-media");
+    var ghostHTML = '<span class="sheet-ghost">' + esc(ghost || item.nom || "") + "</span>";
+    media.innerHTML = "";
+    media.classList.remove("has-photo");
+    if (photo) {
+      media.setAttribute("data-eager", "");
+      media.setAttribute("data-alt", "");
+      addPhoto(media, photo, function () { media.innerHTML = ghostHTML; });
+    } else media.innerHTML = ghostHTML;
+
+    var parts = [
+      ["p", "sheet-kicker", kicker],
+      ["h2", "sheet-title", title],
+      lead && ["p", "sheet-lead", esc(lead)],
+      text && ["p", "sheet-text", esc(text)],
+      facts.length && ["dl", "sheet-facts", facts.join("")],
+      note && ["p", "sheet-note", esc(note)],
+      ["div", "sheet-actions", actions.join("")],
+    ].filter(Boolean);
+    setHTML("#sheet-body", parts.map(function (p, k) {
+      return "<" + p[0] + ' class="' + p[1] + '"' + (p[1] === "sheet-title" ? ' id="sheet-title"' : "") + ' style="--i:' + k + '">' + p[2] + "</" + p[0] + ">";
+    }).join(""));
+    var n = list.length;
+    $("#sheet-nav").hidden = n < 2;
+    setHTML("#sheet-count", ltr(("0" + (sheetState.index + 1)).slice(-2) + " / " + ("0" + n).slice(-2)));
+    sheet.setAttribute("data-kind", kind);
+    if (animate && !REDUCE) {
+      sheetPanel.classList.remove("is-in");
+      void sheetPanel.offsetWidth; // relance les animations d'entrée
+      sheetPanel.classList.add("is-in");
+    }
+    $("#sheet-body").scrollTop = 0;
+  }
+
+  function openSheet(kind, index) {
+    if (!sheetList(kind)[index]) return;
+    sheetState = { kind: kind, index: index, restore: true };
+    renderSheet(true);
+    root.classList.add("modal-open");
+    sheet.classList.remove("is-closing");
+    if (sheet.showModal) { if (!sheet.open) sheet.showModal(); } else sheet.setAttribute("open", "");
+  }
+  function closeSheet(after) {
+    if (!sheet.hasAttribute("open")) return;
+    function done() {
+      sheet.classList.remove("is-closing");
+      if (sheet.close) sheet.close(); else { sheet.removeAttribute("open"); sheet.dispatchEvent(new Event("close")); }
+      root.classList.remove("modal-open"); // tout de suite : la page doit pouvoir défiler vers le formulaire
+      if (after) after();
+    }
+    if (REDUCE) done();
+    else { sheet.classList.add("is-closing"); setTimeout(done, 260); }
+  }
+  function stepSheet(d) {
+    if (!sheetState) return;
+    var n = sheetList(sheetState.kind).length;
+    sheetState.index = (sheetState.index + d + n) % n;
+    renderSheet(true);
+  }
+  // Réserver depuis une fiche : le formulaire est pré-rempli, puis affiché.
+  function prefillBooking(o) {
+    var service = $("#f-service"), msg = $("#f-message");
+    if (o.vehicle != null) $("#f-vehicle").value = o.vehicle;
+    if (o.service) service.value = o.service;
+    else if (service.value === "concierge" || service.value === "other") service.value = "rent";
+    if (o.line && msg.value.indexOf(o.line) < 0) {
+      var cur = msg.value.replace(/\s+$/, "");
+      msg.value = (cur ? cur + "\n" : "") + o.line;
+    }
+  }
+  function sheetAction(action) {
+    var st = sheetState;
+    if (!st) return;
+    var item = sheetList(st.kind)[st.index];
+    st.restore = false;
+    if (action === "3d") {
+      fleetFilter = item.categorie;
+      applyFleetFilter();
+      emit("ns:fleet", { cat: fleetFilter });
+      closeSheet(function () {
+        var show = $(".showroom");
+        if (show) show.scrollIntoView({ behavior: REDUCE ? "auto" : "smooth", block: "center" });
+      });
+      return;
+    }
+    if (st.kind === "car") prefillBooking({ vehicle: item.id });
+    else if (st.kind === "cf") prefillBooking({ vehicle: item.id, service: "chauffeur" });
+    else if (st.kind === "dest") prefillBooking({ service: "concierge", line: t("destinations.prefill") + sep() + destName(item.id) });
+    else prefillBooking({ service: "concierge", line: t("jets.types." + item.type) + sep() + item.nom });
+    closeSheet(function () {
+      var target = $("#reservation");
+      if (target) target.scrollIntoView({ behavior: REDUCE ? "auto" : "smooth" });
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sheet]");
+    if (!b) return;
+    e.preventDefault();
+    openSheet(b.getAttribute("data-sheet"), +b.getAttribute("data-index"));
+  });
+  sheet.addEventListener("click", function (e) {
+    if (e.target === sheet || e.target.closest("#sheet-close")) { closeSheet(); return; } // fond ou croix
+    var step = e.target.closest("[data-sheet-step]");
+    if (step) { stepSheet(+step.getAttribute("data-sheet-step")); return; }
+    var act = e.target.closest("[data-sheet-action]");
+    if (act) sheetAction(act.getAttribute("data-sheet-action"));
+  });
+  sheet.addEventListener("cancel", function (e) { e.preventDefault(); closeSheet(); }); // touche Échap
+  sheet.addEventListener("close", function () {
+    root.classList.remove("modal-open");
+    var st = sheetState;
+    sheetState = null;
+    if (!st || !st.restore) return;
+    // Le focus revient sur la carte affichée en dernier.
+    var card = document.querySelector('.card-cover[data-sheet="' + st.kind + '"][data-index="' + st.index + '"]:not([tabindex="-1"])');
+    if (card) { try { card.focus({ preventScroll: true }); } catch (err) { /* ancien navigateur */ } }
+  });
+  // Flèches du clavier et glissé du doigt : fiche précédente ou suivante (inversé en arabe).
+  sheet.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    var next = (e.key === "ArrowRight") !== (root.dir === "rtl");
+    stepSheet(next ? 1 : -1);
+    e.preventDefault();
+  });
+  var swipe = null;
+  sheetPanel.addEventListener("pointerdown", function (e) { swipe = e.pointerType === "mouse" ? null : { x: e.clientX, y: e.clientY }; });
+  sheetPanel.addEventListener("pointercancel", function () { swipe = null; });
+  sheetPanel.addEventListener("pointerup", function (e) {
+    if (!swipe) return;
+    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) stepSheet((dx < 0) !== (root.dir === "rtl") ? 1 : -1);
+  });
 
   // ---------- Menu mobile ----------
   var header = $(".site-header");
