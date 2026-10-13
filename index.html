@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jolie Vue — Salon de coiffure pour femmes</title>
+  <meta name="description" content="Jolie Vue, salon de coiffure pour femmes : coupe, couleur, balayage, soins et coiffures d'événement. Prestations, tarifs, horaires et prise de rendez-vous.">
+  <meta name="theme-color" content="#f7f1ea">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Jolie Vue — Salon de coiffure pour femmes">
+  <meta property="og:description" content="Coupe, couleur, balayage, soins et coiffures d'événement. Prenez rendez-vous.">
+  <meta property="og:image" content="images/accueil.jpg">
+
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#contenu">Aller au contenu</a>
+
+  <div class="draft-banner" id="draft-banner" hidden>
+    Version provisoire — les éléments <span class="todo">à compléter</span> attendent le contenu réel du salon.
+  </div>
+
+  <header class="site-header" id="haut">
+    <div class="wrap header-inner">
+      <a class="logo" href="#haut" data-fill="nom"></a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav" aria-label="Ouvrir le menu">
+        <span></span><span></span>
+      </button>
+      <nav class="nav" id="nav" aria-label="Navigation principale">
+        <a href="#salon">Le salon</a>
+        <a href="#prestations">Prestations</a>
+        <a href="#galerie">Galerie</a>
+        <a href="#infos">Infos pratiques</a>
+        <a class="btn btn-small" href="#rendez-vous">Prendre rendez-vous</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu">
+
+    <!-- ACCUEIL -->
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-text">
+          <p class="eyebrow" data-fill="typeSalon"></p>
+          <h1 class="hero-title" data-fill="nom"></h1>
+          <p class="hero-slogan" data-fill="slogan"></p>
+          <div class="hero-actions">
+            <a class="btn" href="#rendez-vous">Prendre rendez-vous</a>
+            <a class="btn btn-ghost" href="#prestations">Voir les prestations</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="arch photo-slot" data-photo="accueil" aria-hidden="true"></div>
+          <div class="hero-ornament" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LE SALON -->
+    <section class="section" id="salon">
+      <div class="wrap salon-grid">
+        <div class="salon-photo photo-slot" data-photo="salon" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">Le salon</p>
+          <h2 class="section-title">Un lieu pensé pour vous</h2>
+          <div class="prose" id="presentation"></div>
+        </div>
+      </div>
+      <div class="wrap">
+        <ul class="highlights" id="points-forts"></ul>
+      </div>
+    </section>
+
+    <!-- PRESTATIONS -->
+    <section class="section section-tinted" id="prestations">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Carte des soins</p>
+          <h2 class="section-title">Prestations &amp; tarifs</h2>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Catégories de prestations" id="tabs"></div>
+        <div id="panels"></div>
+        <p class="note" id="note-tarifs"></p>
+      </div>
+    </section>
+
+    <!-- GALERIE -->
+    <section class="section" id="galerie">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Réalisations</p>
+          <h2 class="section-title">Galerie</h2>
+        </div>
+        <div class="gallery" id="gallery"></div>
+        <p class="center" id="insta-cta"></p>
+      </div>
+    </section>
+
+    <!-- RENDEZ-VOUS -->
+    <section class="section booking" id="rendez-vous">
+      <div class="wrap booking-inner">
+        <p class="eyebrow">Rendez-vous</p>
+        <h2 class="section-title">Réservez votre moment</h2>
+        <p class="booking-lead">Appelez-nous ou réservez directement le créneau qui vous convient.</p>
+        <div class="booking-actions" id="booking-actions"></div>
+      </div>
+    </section>
+
+    <!-- INFOS PRATIQUES -->
+    <section class="section" id="infos">
+      <div class="wrap infos-grid">
+        <div>
+          <p class="eyebrow">Infos pratiques</p>
+          <h2 class="section-title">Nous trouver</h2>
+          <dl class="contact-list" id="contact-list"></dl>
+        </div>
+        <div>
+          <h3 class="sub-title">Horaires</h3>
+          <table class="hours" id="hours"></table>
+        </div>
+        <div class="map" id="map"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p class="logo logo-footer" data-fill="nom"></p>
+      <div class="socials" id="socials"></div>
+      <p class="small">© <span id="year"></span> <span data-fill="nom"></span> · <span data-fill="typeSalon"></span></p>
+    </div>
+  </footer>
+
+  <!-- Barre d'action fixe sur mobile -->
+  <div class="mobile-bar" id="mobile-bar"></div>
+
+  <script src="js/content.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
