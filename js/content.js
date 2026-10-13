@@ -41,6 +41,7 @@ window.SALON = {
     adresse: "TODO numéro et rue",
     codePostal: "TODO",
     ville: "TODO",
+    pays: "FR",                             // code pays : FR, BE, CH, CA…
     // Lien de réservation en ligne (Planity, Treatwell, Google…). null = réservation par téléphone uniquement.
     reservationEnLigne: null,
   },

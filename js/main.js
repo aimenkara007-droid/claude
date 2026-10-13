@@ -202,7 +202,7 @@
   var ld = { "@context": "https://schema.org", "@type": "HairSalon", name: S.nom };
   if (!isTodo(C.adresse)) {
     ld.address = { "@type": "PostalAddress", streetAddress: C.adresse, postalCode: isTodo(C.codePostal) ? undefined : C.codePostal,
-      addressLocality: isTodo(C.ville) ? undefined : C.ville, addressCountry: "FR" };
+      addressLocality: isTodo(C.ville) ? undefined : C.ville, addressCountry: C.pays || "FR" };
   }
   if (C.telephoneLien) ld.telephone = C.telephoneLien;
   if (C.email) ld.email = C.email;
