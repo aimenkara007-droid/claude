@@ -13,7 +13,7 @@ window.NS = {
   siteWeb: "https://www.napoleonservices.com/",
 
   // Ordre du sélecteur de langue. Une langue absente de js/i18n/ est ignorée.
-  langues: ["fr", "en", "es", "it", "ru", "zh"],
+  langues: ["fr", "en", "ar", "es", "it", "ru", "zh"],
   langueParDefaut: "fr",
 
   contact: {

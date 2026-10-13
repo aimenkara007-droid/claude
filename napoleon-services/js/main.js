@@ -49,9 +49,14 @@
     return "<a" + (cls ? ' class="' + cls + '"' : "") + ' href="' + esc(href) + '"' +
       (external ? ' target="_blank" rel="noopener"' : "") + ">" + label + "</a>";
   }
+  function intl() { return L.intl || L.htmlLang; }
+  // Numéros, adresses, e-mails : toujours de gauche à droite, même dans une page en arabe.
+  function ltr(html) { return '<span dir="ltr">' + html + "</span>"; }
+  // Même chose pour du texte brut (listes déroulantes, message WhatsApp) : « 911 Carrera » reste dans l'ordre.
+  function isolate(text) { return "\u2066" + text + "\u2069"; }
   function plural(forms, n) {
     var rule = "other";
-    try { rule = new Intl.PluralRules(L.htmlLang).select(n); } catch (e) { /* navigateur ancien */ }
+    try { rule = new Intl.PluralRules(intl()).select(n); } catch (e) { /* navigateur ancien */ }
     return (forms[rule] || forms.other).replace("{n}", n);
   }
   function storage(key, value) {
@@ -76,13 +81,14 @@
     return nav[0] && LANGS.indexOf("en") >= 0 ? "en" : DEFAULT;
   }
 
-  var zhFontsLoaded = false;
-  function loadZhFonts() {
-    if (zhFontsLoaded) return;
-    zhFontsLoaded = true;
+  // Polices propres à une langue (chinois, arabe) : chargées seulement quand on la choisit.
+  var fontsLoaded = {};
+  function loadFonts(href) {
+    if (!href || fontsLoaded[href]) return;
+    fontsLoaded[href] = true;
     var l = document.createElement("link");
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;500&display=swap";
+    l.href = href;
     document.head.appendChild(l);
   }
 
@@ -92,7 +98,8 @@
     lang = code;
     L = I18N[code];
     document.documentElement.lang = L.htmlLang || code;
-    if (/^zh/.test(L.htmlLang)) loadZhFonts();
+    document.documentElement.dir = L.dir || "ltr";
+    loadFonts(L.fonts);
     if (opts.remember) storage("ns-lang", code);
     if (opts.updateUrl) {
       try {
@@ -249,8 +256,8 @@
   }
 
   function renderHero() {
-    setHTML("#hero-address", esc(adresseLigne));
-    setHTML("#hero-phone", phone ? link("tel:" + phone.lien, esc(phone.affiche)) : "");
+    setHTML("#hero-address", ltr(esc(adresseLigne)));
+    setHTML("#hero-phone", phone ? link("tel:" + phone.lien, ltr(esc(phone.affiche))) : "");
   }
 
   // Bande défilante : marques et services en alternance, deux copies pour une boucle sans couture.
@@ -293,8 +300,8 @@
           '<span class="car-ghost" aria-hidden="true">' + esc(car.embleme || car.modele) + "</span>" +
         "</div>" +
         '<div class="car-body">' +
-          '<p class="car-brand">' + esc(car.marque) + "</p>" +
-          '<h3 class="car-model">' + esc(car.modele) + "</h3>" +
+          '<p class="car-brand">' + ltr(esc(car.marque)) + "</p>" +
+          '<h3 class="car-model">' + ltr(esc(car.modele)) + "</h3>" +
           '<p class="car-desc">' + esc(t("fleet.cars." + car.id)) + "</p>" +
           '<ul class="car-specs">' + specs.join("") + "</ul>" +
           '<div class="car-foot">' +
@@ -357,7 +364,7 @@
       return '<option value="' + k + '">' + esc(t("booking.services." + k)) + "</option>";
     }).join("");
     vehicle.innerHTML = '<option value="">' + esc(t("booking.vehicleAny")) + "</option>" + cars.map(function (c) {
-      return '<option value="' + esc(c.id) + '">' + esc(c.marque + " " + c.modele) + "</option>";
+      return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + c.modele)) + "</option>";
     }).join("");
     service.value = sv;
     vehicle.value = vv;
@@ -369,7 +376,7 @@
       ? '<p class="form-pending">WhatsApp / e-mail : ' + todo() + "</p>"
       : '<p class="form-pending">' + esc(t("booking.noChannel")) + "</p>");
     setHTML("#form-actions", actions.join(""));
-    setHTML("#form-call", phone ? esc(t("booking.orCall")) + " " + link("tel:" + phone.lien, esc(phone.affiche), "link-line") : "");
+    setHTML("#form-call", phone ? esc(t("booking.orCall")) + " " + link("tel:" + phone.lien, ltr(esc(phone.affiche)), "link-line") : "");
     $("#form-error").hidden = true;
   }
 
@@ -380,7 +387,7 @@
   function fmtDate(iso) {
     if (!iso) return "";
     try {
-      return new Intl.DateTimeFormat(L.htmlLang, { day: "numeric", month: "long", year: "numeric" })
+      return new Intl.DateTimeFormat(intl(), { day: "numeric", month: "long", year: "numeric" })
         .format(new Date(iso + "T12:00:00"));
     } catch (e) { return iso; }
   }
@@ -394,7 +401,7 @@
     add(t("booking.fields.phone"), f("f-phone"));
     add(t("booking.fields.email"), f("f-email"));
     add(t("booking.fields.service"), t("booking.services." + f("f-service")));
-    add(t("booking.fields.vehicle"), car ? car.marque + " " + car.modele : t("booking.vehicleAny"));
+    add(t("booking.fields.vehicle"), car ? isolate(car.marque + " " + car.modele) : t("booking.vehicleAny"));
     add(t("booking.fields.from"), fmtDate(f("f-from")));
     add(t("booking.fields.to"), fmtDate(f("f-to")));
     if (f("f-message")) lines.push("", f("f-message"));
@@ -437,7 +444,7 @@
   var REF_MONDAY = new Date(2024, 0, 1, 12); // un lundi
   function dayName(i) {
     var d = new Date(REF_MONDAY.getTime() + i * 864e5);
-    try { return new Intl.DateTimeFormat(L.htmlLang, { weekday: "long" }).format(d); }
+    try { return new Intl.DateTimeFormat(intl(), { weekday: "long" }).format(d); }
     catch (e) { return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]; }
   }
   function parisDayIndex() {
@@ -456,11 +463,11 @@
 
   function renderContact() {
     var rows = [];
-    rows.push([t("contact.address"), esc(C.adresse) + "<br>" + esc([C.codePostal, C.ville].filter(ok).join(" ")) +
+    rows.push([t("contact.address"), ltr(esc(C.adresse)) + "<br>" + ltr(esc([C.codePostal, C.ville].filter(ok).join(" "))) +
       "<br>" + link(itineraire, esc(t("contact.directions")), "link-line link-small", true)]);
-    rows.push([t("contact.phone"), phone ? link("tel:" + phone.lien, esc(phone.affiche)) : todo()]);
-    if (hasEmail || DRAFT) rows.push([t("contact.email"), hasEmail ? link("mailto:" + C.email, esc(C.email)) : todo()]);
-    if (hasWhatsapp || DRAFT) rows.push([t("contact.whatsapp"), hasWhatsapp ? link("https://wa.me/" + C.whatsapp, "+" + esc(C.whatsapp), "", true) : todo()]);
+    rows.push([t("contact.phone"), phone ? link("tel:" + phone.lien, ltr(esc(phone.affiche))) : todo()]);
+    if (hasEmail || DRAFT) rows.push([t("contact.email"), hasEmail ? link("mailto:" + C.email, ltr(esc(C.email))) : todo()]);
+    if (hasWhatsapp || DRAFT) rows.push([t("contact.whatsapp"), hasWhatsapp ? link("https://wa.me/" + C.whatsapp, ltr("+" + esc(C.whatsapp)), "", true) : todo()]);
     setHTML("#contact-list", rows.map(function (r) {
       return "<div><dt>" + esc(r[0]) + "</dt><dd>" + r[1] + "</dd></div>";
     }).join(""));
@@ -529,7 +536,7 @@
         "Conformément au RGPD, vous pouvez demander l’accès, la rectification ou la suppression de vos données à l’adresse " + mail + ". " +
         "Ce site affiche une carte Google Maps et utilise des polices Google Fonts, chargées depuis les serveurs de Google."],
     ];
-    setHTML("#legal-body", '<dl lang="fr">' + rows.map(function (r) {
+    setHTML("#legal-body", '<dl lang="fr" dir="ltr">' + rows.map(function (r) {
       return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>";
     }).join("") + "</dl>");
     var note = t("legal.note");

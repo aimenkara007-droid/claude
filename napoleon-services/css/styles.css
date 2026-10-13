@@ -63,11 +63,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter); }
 
+/* Caché au-dessus de la page (et non à gauche, ce qui créerait un défilement en arabe). */
 .skip {
-  position: absolute; left: -9999px; top: 8px; z-index: 100;
+  position: absolute; top: 8px; inset-inline-start: 8px; z-index: 100;
   background: var(--gold); color: var(--night); padding: 10px 16px;
+  transform: translateY(-300%);
 }
-.skip:focus { left: 8px; }
+.skip:focus { transform: none; }
 :focus-visible { outline: 1px solid var(--gold); outline-offset: 4px; }
 .noscript { padding: 16px var(--gutter); background: var(--night-3); margin: 0; text-align: center; }
 
@@ -85,7 +87,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 /* Bandeau « version provisoire » : petite étiquette fixe, en bas à gauche. */
 .draft-banner {
-  position: fixed; left: 16px; bottom: 16px; z-index: 45; max-width: calc(100% - 32px);
+  position: fixed; inset-inline-start: 16px; bottom: 16px; z-index: 45; max-width: calc(100% - 32px);
   background: var(--gold); color: var(--night); box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
   font-size: .6rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
   padding: 8px 14px; cursor: pointer;
@@ -243,7 +245,7 @@ html[lang^="zh"] .nav > a:not(.btn) { letter-spacing: .1em; font-size: .82rem; }
 .lang.is-open .lang-toggle svg { transform: rotate(180deg); }
 .lang-list {
   list-style: none; margin: 0; padding: 8px 0;
-  position: absolute; right: 0; top: calc(100% + 10px); min-width: 190px;
+  position: absolute; inset-inline-end: 0; top: calc(100% + 10px); min-width: 190px;
   background: var(--night-3); border: 1px solid var(--line-strong);
   box-shadow: 0 30px 60px rgba(0, 0, 0, .5);
   opacity: 0; visibility: hidden; transform: translateY(-6px);
@@ -252,7 +254,7 @@ html[lang^="zh"] .nav > a:not(.btn) { letter-spacing: .1em; font-size: .82rem; }
 .lang.is-open .lang-list { opacity: 1; visibility: visible; transform: none; }
 .lang-list button {
   width: 100%; display: flex; align-items: baseline; gap: 14px;
-  padding: 10px 20px; background: none; border: 0; cursor: pointer; text-align: left;
+  padding: 10px 20px; background: none; border: 0; cursor: pointer; text-align: start;
   transition: background-color .3s var(--ease), color .3s var(--ease);
 }
 .lang-list button:hover, .lang-list button:focus-visible { background: rgba(200, 169, 107, .1); color: var(--gold-light); outline: none; }
@@ -326,7 +328,7 @@ html[lang^="zh"] .nav > a:not(.btn) { letter-spacing: .1em; font-size: .82rem; }
     radial-gradient(40% 40% at 10% 0%, rgba(200, 169, 107, .07), transparent 70%);
 }
 .hero-arc {
-  position: absolute; z-index: -1; right: max(var(--gutter), calc((100vw - 1240px) / 2 + 48px)); bottom: 12vh;
+  position: absolute; z-index: -1; inset-inline-end: max(var(--gutter), calc((100vw - 1240px) / 2 + 48px)); bottom: 12vh;
   width: min(560px, 44vw); height: auto; overflow: visible;
   fill: none; stroke: var(--gold); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: .55;
   transition: opacity 1s var(--ease);
@@ -366,7 +368,7 @@ html[lang^="zh"] .hero-title { font-size: clamp(2.6rem, 7.4vw, 6.6rem); font-wei
   font-size: .72rem; letter-spacing: .12em; color: var(--mist);
 }
 .hero-foot p { margin: 0; }
-.hero-foot p:last-child { text-align: right; }
+.hero-foot p:last-child { text-align: end; }
 .hero-foot a { text-decoration: none; }
 .hero-foot a:hover { color: var(--gold); }
 .scroll-cue {
@@ -381,7 +383,7 @@ html[lang^="zh"] .hero-title { font-size: clamp(2.6rem, 7.4vw, 6.6rem); font-wei
 @keyframes cue { to { top: 100%; } }
 
 /* ---------- Bande défilante ---------- */
-.marquee { overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 0; background: var(--night); }
+.marquee { direction: ltr; overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 0; background: var(--night); }
 .marquee-track { display: flex; width: max-content; animation: marquee 60s linear infinite; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 .marquee-group { display: flex; align-items: center; }
@@ -407,7 +409,7 @@ html[lang^="zh"] .manifesto-title { font-weight: 400; letter-spacing: .04em; fon
   border-top: 1px solid var(--line);
 }
 .pillars li { padding: 44px clamp(20px, 3vw, 44px) 0; text-align: center; }
-.pillars li + li { border-left: 1px solid var(--line); }
+.pillars li + li { border-inline-start: 1px solid var(--line); }
 .pillar-num { display: block; font-family: var(--brand); color: var(--gold); font-size: .9rem; letter-spacing: .2em; margin-bottom: 18px; }
 .pillars h3 { font-size: 1.9rem; margin-bottom: 14px; }
 .pillars p { color: var(--mist); font-size: .95rem; margin: 0; }
@@ -495,15 +497,15 @@ html[lang^="zh"] .types-label, html[lang^="zh"] .car-brand { letter-spacing: .12
 .concierge {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--line); border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line); border-inline-start: 1px solid var(--line);
 }
 .concierge-item {
   position: relative; padding: clamp(36px, 4vw, 56px) clamp(24px, 3vw, 44px);
-  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line); border-bottom: 1px solid var(--line);
   transition: background-color .6s var(--ease), opacity 1.1s var(--ease), transform 1.1s var(--ease-out);
 }
 .concierge-item::before {
-  content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 1px; background: var(--gold);
+  content: ""; position: absolute; inset-inline-start: 0; top: 0; width: 100%; height: 1px; background: var(--gold);
   transform: scaleX(0); transform-origin: left; transition: transform .8s var(--ease-out);
 }
 .concierge-item:hover { background: rgba(200, 169, 107, .045); }
@@ -529,7 +531,7 @@ html[lang^="zh"] .types-label, html[lang^="zh"] .car-brand { letter-spacing: .12
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(32px, 4vw, 64px); counter-reset: step; }
 .step { position: relative; padding-top: 30px; border-top: 1px solid var(--line); }
 .step::before {
-  content: ""; position: absolute; left: 0; top: -1px; width: 56px; height: 1px; background: var(--gold);
+  content: ""; position: absolute; inset-inline-start: 0; top: -1px; width: 56px; height: 1px; background: var(--gold);
 }
 .step-num {
   display: block; font-family: var(--display); font-size: 4.4rem; line-height: 1; margin-bottom: 18px;
@@ -571,17 +573,17 @@ html[lang^="zh"] .field label { letter-spacing: .1em; font-size: .78rem; }
 .field textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
 .field select {
-  appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 26px;
+  appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 26px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c8a96b' stroke-width='1.2'/%3E%3C/svg%3E") right 4px center / 10px 6px no-repeat;
 }
 .field select option { background: var(--night-3); color: var(--ivory); }
 .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.75) sepia(.4) saturate(2.5); cursor: pointer; }
 .field ::placeholder { color: rgba(163, 156, 146, .6); }
-.form-error { margin: 0; padding: 12px 16px; border-left: 2px solid #e0876b; background: rgba(224, 135, 107, .08); color: #f1b9a6; font-size: .9rem; }
+.form-error { margin: 0; padding: 12px 16px; border-inline-start: 2px solid #e0876b; background: rgba(224, 135, 107, .08); color: #f1b9a6; font-size: .9rem; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .form-pending { margin: 0; color: var(--mist); }
 .form-call { margin: -10px 0 0; color: var(--mist); font-size: .92rem; }
-.form-call .link-line { margin-left: 6px; color: var(--ivory); }
+.form-call .link-line { margin-inline-start: 6px; color: var(--ivory); }
 .form-note { margin: -16px 0 0; font-size: .78rem; color: var(--mist); }
 
 /* ---------- Contact ---------- */
@@ -596,12 +598,12 @@ html[lang^="zh"] .contact-list dt { letter-spacing: .08em; font-size: .8rem; }
 .contact-list dd a:not(.link-line) { text-decoration: none; border-bottom: 1px solid var(--gold-deep); }
 .contact-list dd a:not(.link-line):hover { color: var(--gold); }
 .hours { width: 100%; border-collapse: collapse; }
-.hours th, .hours td { padding: 12px 0; border-bottom: 1px solid var(--line); text-align: left; font-weight: 300; }
+.hours th, .hours td { padding: 12px 0; border-bottom: 1px solid var(--line); text-align: start; font-weight: 300; }
 .hours th { text-transform: capitalize; }
-.hours td { text-align: right; }
+.hours td { text-align: end; }
 .hours .is-today th, .hours .is-today td { color: var(--gold); font-weight: 500; }
 .hours .is-closed td { color: var(--mist); }
-.today-tag { margin-left: 10px; font-size: .56rem; letter-spacing: .2em; text-transform: uppercase; border: 1px solid currentColor; padding: 2px 7px; vertical-align: middle; }
+.today-tag { margin-inline-start: 10px; font-size: .56rem; letter-spacing: .2em; text-transform: uppercase; border: 1px solid currentColor; padding: 2px 7px; vertical-align: middle; }
 .map { grid-area: map; height: clamp(320px, 42vw, 460px); border: 1px solid var(--line); overflow: hidden; background: var(--night-3); }
 .map iframe { width: 100%; height: 100%; border: 0; filter: grayscale(1) invert(.92) contrast(.88) brightness(.95); }
 
@@ -656,10 +658,10 @@ html[lang^="zh"] .footer-nav a { letter-spacing: .08em; font-size: .8rem; }
   .house-visual { aspect-ratio: 16 / 11; order: -1; }
   .pillars { grid-template-columns: 1fr; }
   .pillars li { padding: 36px 0; }
-  .pillars li + li { border-left: 0; border-top: 1px solid var(--line); }
+  .pillars li + li { border-inline-start: 0; border-top: 1px solid var(--line); }
   .steps { grid-template-columns: 1fr; }
   .contact-grid { grid-template-columns: 1fr; grid-template-areas: "info" "hours" "map"; }
-  .hero-arc { width: min(420px, 78vw); right: 50%; translate: 50% 0; bottom: 18vh; opacity: .22; }
+  .hero-arc { width: min(420px, 78vw); inset-inline-end: auto; left: 50%; translate: -50% 0; bottom: 18vh; opacity: .22; }
   .hero-foot { grid-template-columns: 1fr; text-align: center; }
   .hero-foot p:last-child { text-align: center; }
   .scroll-cue { display: none; }
@@ -687,10 +689,49 @@ html[lang^="zh"] .footer-nav a { letter-spacing: .08em; font-size: .8rem; }
     flex: 1; min-height: 64px; display: flex; align-items: center; justify-content: center;
     font-size: .66rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; text-decoration: none;
   }
-  .mobile-bar a + a { border-left: 1px solid var(--line); }
+  .mobile-bar a + a { border-inline-start: 1px solid var(--line); }
   .mobile-bar a.is-primary { background: var(--gold); color: var(--night); }
   .menu-open .mobile-bar { display: none; }
 }
+
+/* ============ Arabe : écriture de droite à gauche ============ */
+html[lang="ar"] {
+  --display: "Amiri", "Times New Roman", serif;
+  --sans: "Tajawal", "Segoe UI", Tahoma, sans-serif;
+}
+html[lang="ar"] body { font-weight: 400; line-height: 1.9; }
+html[lang="ar"] em { font-style: normal; }
+/* Aucun espacement entre les lettres : il casserait la liaison des lettres arabes. */
+html[lang="ar"] :is(.eyebrow, .btn, .link-line, .link-arrow, .nav > a, .chip, .car-price span, .types-label,
+  .field label, .contact-list dt, .today-tag, .footer-nav a, .mobile-bar a, .scroll-cue, .draft-banner,
+  .lang-toggle, .lang-code, .signature, .section-title, .hero-title) { letter-spacing: 0; }
+html[lang="ar"] .eyebrow { font-size: .92rem; }
+html[lang="ar"] :is(.btn, .link-line, .link-arrow, .chip, .mobile-bar a) { font-size: .92rem; font-weight: 500; }
+html[lang="ar"] .nav > a:not(.btn) { font-size: .98rem; }
+html[lang="ar"] :is(.field label, .contact-list dt, .types-label, .car-price span, .today-tag) { font-size: .84rem; }
+html[lang="ar"] .hero-title { font-size: clamp(2.9rem, 7.6vw, 7rem); font-weight: 400; line-height: 1.35; }
+html[lang="ar"] .section-title { font-size: clamp(2.2rem, 4.8vw, 4rem); font-weight: 400; line-height: 1.4; }
+html[lang="ar"] .manifesto-title { font-size: clamp(2rem, 4.2vw, 3.4rem); font-weight: 400; line-height: 1.5; }
+html[lang="ar"] :is(.pillars h3, .services h3, .concierge-item h3, .step h3, .sub-title, .legal h2) { line-height: 1.45; }
+html[lang="ar"] .split .w { padding: .2em 0 .3em; margin: -.2em 0 -.3em; }
+html[lang="ar"] .marquee-item:not(.is-brand) { font-style: normal; }
+html[lang="ar"] .signature { font-family: var(--sans); text-transform: none; }
+@media (max-width: 1080px) { html[lang="ar"] .nav > a:not(.btn) { font-size: 1.9rem; } }
+
+/* Les effets qui « balaient » de gauche à droite partent de la droite. */
+html[dir="rtl"] .site-header::after { transform-origin: right; }
+html[dir="rtl"] .btn::before { transform-origin: left center; }
+html[dir="rtl"] .btn:hover::before { transform-origin: right center; }
+html[dir="rtl"] .link-line::after, html[dir="rtl"] .concierge-item::before { transform-origin: right; }
+html[dir="rtl"] .nav > a:not(.btn)::after { transform-origin: left; }
+html[dir="rtl"] .nav > a:not(.btn):hover::after { transform-origin: right; }
+html.js[dir="rtl"] .eyebrow::before { transform-origin: left; }
+html.js[dir="rtl"] .eyebrow::after { transform-origin: right; }
+html[dir="rtl"] .link-arrow .icon { transform: scaleX(-1); }
+html[dir="rtl"] .link-arrow:hover .icon { transform: scaleX(-1) translateX(6px); }
+html[dir="rtl"] .hero-glow { transform: scaleX(-1); }
+html[dir="rtl"] .field select { background-position: left 4px center; }
+html[dir="rtl"] :is(input[type="tel"], input[type="email"]) { direction: ltr; text-align: right; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

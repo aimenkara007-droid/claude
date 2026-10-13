@@ -1,7 +1,7 @@
 # Napoléon Services — site web
 
 Site vitrine pour **Napoléon Services** (Paris 8e) : location de voitures de luxe avec ou sans chauffeur, et conciergerie.
-Le site est statique (HTML + CSS + JS), sans dépendances ni compilation. Il est traduit en 6 langues : français, anglais, espagnol, italien, russe et chinois simplifié.
+Le site est statique (HTML + CSS + JS), sans dépendances ni compilation. Il est traduit en 7 langues : français, anglais, arabe, espagnol, italien, russe et chinois simplifié.
 
 ## Structure
 
@@ -9,7 +9,7 @@ Le site est statique (HTML + CSS + JS), sans dépendances ni compilation. Il est
 index.html          structure de la page (pas besoin d'y toucher)
 css/styles.css      design
 js/content.js       ← données communes : contact, horaires, flotte, photos, mentions légales
-js/i18n/fr.js …     ← textes de chaque langue (fr, en, es, it, ru, zh)
+js/i18n/fr.js …     ← textes de chaque langue (fr, en, ar, es, it, ru, zh)
 js/main.js          affiche la page à partir des deux précédents (pas besoin d'y toucher)
 images/             logo, photos, favicon ; images/flotte/ pour les voitures
 ```
@@ -19,13 +19,14 @@ Sections : accueil · bande défilante · manifeste · la flotte (avec filtres) 
 ## Langues
 
 - **Langue affichée :** celle du navigateur du visiteur si elle est proposée, sinon l'anglais. Le visiteur peut en changer avec le sélecteur en haut à droite ou dans le pied de page, et son choix est mémorisé.
-- **Lien direct :** `?lang=fr`, `?lang=en`, `?lang=es`, `?lang=it`, `?lang=ru` ou `?lang=zh`. Google reçoit ces adresses via les balises `hreflang`.
+- **Lien direct :** `?lang=fr`, `?lang=en`, `?lang=ar`, `?lang=es`, `?lang=it`, `?lang=ru` ou `?lang=zh`. Google reçoit ces adresses via les balises `hreflang`.
+- **Arabe :** toute la page passe de droite à gauche (`dir: "rtl"` dans `ar.js`), avec des polices arabes (Amiri pour les titres, Tajawal pour le texte). Les numéros, l'adresse, l'e-mail et les noms de voitures restent écrits de gauche à droite.
+- **Polices du chinois et de l'arabe :** elles ne sont chargées que lorsque la langue est choisie (champ `fonts`).
 - **Mise en valeur :** dans les fichiers `js/i18n/*.js`, le texte entre `*astérisques*` s'affiche en italique doré.
-- **Relecture :** les traductions russe et chinoise doivent être relues par un locuteur natif avant la mise en ligne. Les tournures sont correctes, mais le ton « luxe » mérite une validation.
-- **Ajouter une langue** (l'arabe, par exemple) :
-  1. Copier `js/i18n/en.js` sous un nouveau nom et traduire le texte.
-  2. L'ajouter dans `langues` (`content.js`) et dans `index.html`, à côté des autres `<script>`.
-  3. Pour l'arabe uniquement, il faudra aussi gérer l'affichage de droite à gauche (`dir="rtl"`).
+- **Relecture :** les traductions arabe, russe et chinoise doivent être relues par un locuteur natif avant la mise en ligne. Les tournures sont correctes, mais le ton « luxe » mérite une validation.
+- **Ajouter une langue :**
+  1. Copier `js/i18n/en.js` sous un nouveau nom et traduire le texte. Pour une langue qui s'écrit de droite à gauche, partir de `ar.js`.
+  2. L'ajouter dans `langues` (`content.js`), dans `index.html` à côté des autres `<script>`, et dans les balises `hreflang`.
 
 ## Modifier le contenu
 
@@ -63,7 +64,7 @@ Ces informations viennent de l'ancien site, tel qu'indexé par les moteurs de re
 - [ ] **Services :** chauffeur (aéroports desservis, types de véhicules) et conciergerie (yacht, jet, villas). Les détails ont été rédigés comme des propositions.
 - [ ] **Mentions légales :** forme sociale (SAS ou SASU ?), capital, n° de TVA, directeur de la publication, hébergeur.
 - [ ] **Photos et logo.**
-- [ ] **Traductions :** relecture russe et chinoise.
+- [ ] **Traductions :** relecture arabe, russe et chinoise.
 
 ## Voir le site en local
 

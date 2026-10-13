@@ -4,6 +4,7 @@
   code: "中文",
   htmlLang: "zh-Hans",
   locale: "zh_CN",
+  fonts: "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;500&display=swap",
 
   meta: {
     title: "Napoléon Services — 巴黎豪华汽车租赁（自驾或配司机）",
