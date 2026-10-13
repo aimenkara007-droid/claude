@@ -907,8 +907,9 @@
   }
   function fact(label, value) { return value ? "<div><dt>" + esc(label) + "</dt><dd>" + value + "</dd></div>" : ""; }
   function sheetButton(action, label, primary) {
-    return '<button type="button" class="btn btn-small magnetic ' + (primary ? "btn-gold" : "btn-ghost") + '" data-sheet-action="' + action + '">' +
-      esc(label) + (primary ? icon("arrow", "icon icon-sm") : "") + "</button>";
+    if (!primary) return '<button type="button" class="link-line sheet-link" data-sheet-action="' + action + '">' + esc(label) + "</button>";
+    return '<button type="button" class="btn btn-small btn-gold" data-sheet-action="' + action + '">' +
+      esc(label) + icon("arrow", "icon icon-sm") + "</button>";
   }
 
   function renderSheet(animate) {
@@ -960,6 +961,10 @@
     var ghostHTML = '<span class="sheet-ghost">' + esc(ghost || item.nom || "") + "</span>";
     media.innerHTML = "";
     media.classList.remove("has-photo");
+    // Fond flouté tiré de la même photo (adresse absolue : une adresse relative serait lue depuis css/).
+    var bg = "none";
+    try { if (photo) bg = 'url("' + new URL(photo, document.baseURI).href + '")'; } catch (e) { /* ancien navigateur */ }
+    media.style.setProperty("--bg", bg);
     if (photo) {
       media.setAttribute("data-eager", "");
       media.setAttribute("data-alt", "");

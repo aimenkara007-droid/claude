@@ -945,10 +945,10 @@ html[lang="ar"] .card-more { letter-spacing: 0; font-size: .74rem; }
 
 /* ---------- Fiche détaillée (destination, voiture, jet, yacht) ---------- */
 .sheet {
-  width: min(1120px, calc(100% - 48px)); max-width: none; height: min(660px, calc(100vh - 48px)); max-height: none;
+  width: min(1120px, calc(100% - 48px)); max-width: none; height: min(700px, calc(100vh - 48px)); max-height: none;
   padding: 0; border: 1px solid rgba(200, 169, 107, .35); background: var(--night-3); color: var(--ivory); overflow: hidden;
 }
-@supports (height: 100dvh) { .sheet { height: min(660px, calc(100dvh - 48px)); } }
+@supports (height: 100dvh) { .sheet { height: min(700px, calc(100dvh - 48px)); } }
 .sheet::backdrop { background: rgba(5, 5, 6, .8); backdrop-filter: blur(8px); }
 .sheet[open] { animation: sheet-in .7s var(--ease-out); }
 .sheet[open]::backdrop { animation: sheet-fade .5s var(--ease); }
@@ -962,23 +962,36 @@ html[lang="ar"] .card-more { letter-spacing: 0; font-size: .74rem; }
 .sheet-media { position: relative; overflow: hidden; background: radial-gradient(70% 80% at 50% 110%, rgba(200, 169, 107, .2), transparent 70%), #111114; }
 .sheet-media::after { content: ""; position: absolute; inset: auto 0 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(8, 8, 10, .75)); pointer-events: none; }
 .sheet-media img { transform-origin: 50% 60%; }
+/* Voitures et destinations : la photo entière, sur un fond flouté tiré d'elle-même. */
+.sheet-media::before {
+  content: ""; position: absolute; inset: -40px;
+  background: var(--bg, none) center / cover no-repeat; filter: blur(26px) brightness(.4) saturate(1.15);
+}
+.sheet:not([data-kind="jet"]) .sheet-media img { object-fit: contain; }
 .sheet-ghost {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center;
   font-family: var(--brand); font-size: clamp(2rem, 4.4vw, 3.6rem); letter-spacing: .12em; text-transform: uppercase;
   color: transparent; -webkit-text-stroke: 1px rgba(200, 169, 107, .65);
 }
-.sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: clamp(40px, 4.4vw, 64px) clamp(28px, 4vw, 56px) clamp(28px, 3.4vw, 44px); display: flex; flex-direction: column; }
+.sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: clamp(40px, 4.4vw, 64px) clamp(28px, 4vw, 56px) 0; display: flex; flex-direction: column; }
 .sheet-kicker { margin: 0 0 14px; font-size: .62rem; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
 .sheet-title { margin: 0 0 22px; font-size: clamp(2.3rem, 3.6vw, 3.4rem); font-weight: 300; line-height: 1.02; padding-inline-end: 44px; }
 .sheet-lead { margin: 0 0 14px; font-family: var(--display); font-style: italic; font-size: 1.32rem; line-height: 1.4; color: var(--gold-light); }
-.sheet-text { margin: 0 0 28px; color: var(--mist); font-size: .98rem; line-height: 1.75; }
+.sheet-text { margin: 0 0 24px; color: var(--mist); font-size: .98rem; line-height: 1.75; }
 .sheet-facts { margin: 0 0 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
 .sheet-facts div { padding: 14px 0; border-bottom: 1px solid var(--line); }
 .sheet-facts div:nth-child(odd) { padding-inline-end: 16px; }
 .sheet-facts dt { margin-bottom: 6px; font-size: .56rem; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
 .sheet-facts dd { margin: 0; font-family: var(--display); font-size: 1.3rem; line-height: 1.2; }
 .sheet-note { margin: 0 0 22px; font-size: .78rem; font-style: italic; color: var(--mist); }
-.sheet-actions { margin-top: auto; padding-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; }
+/* Boutons collés en bas de la fiche : toujours visibles, même quand le texte est long. */
+.sheet-actions {
+  position: sticky; bottom: 0; z-index: 1; margin-top: auto;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px;
+  padding: 26px 0 clamp(26px, 3vw, 40px);
+  background: linear-gradient(180deg, rgba(23, 23, 27, 0), var(--night-3) 26px);
+}
+.sheet-link { background: none; border: 0; border-radius: 0; color: var(--ivory); font-family: var(--sans); cursor: pointer; }
 
 .sheet-close {
   position: absolute; z-index: 3; inset-block-start: 18px; inset-inline-end: 18px; width: 48px; height: 48px;
@@ -1038,9 +1051,11 @@ html[lang^="zh"] .sheet-lead { font-style: normal; }
   @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
   .sheet-panel { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
   .sheet-media { aspect-ratio: 4 / 3; }
-  .sheet-body { padding: 26px 22px calc(26px + env(safe-area-inset-bottom)); }
+  .sheet-body { padding: 26px 22px 0; }
+  .sheet-actions { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
   .sheet-title { font-size: 2.3rem; padding-inline-end: 0; }
   .sheet-actions .btn { width: 100%; }
+  .sheet-actions .sheet-link { margin-inline: auto; }
   .sheet-close { inset-block-start: 14px; inset-inline-end: 14px; width: 44px; height: 44px; }
   .sheet-nav { inset-block-end: auto; inset-block-start: calc(75vw - 60px); inset-inline-start: 16px; }
   .sheet-arrow { width: 42px; height: 42px; }
