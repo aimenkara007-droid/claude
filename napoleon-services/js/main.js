@@ -55,7 +55,10 @@
   // Numéros, adresses, e-mails : toujours de gauche à droite, même dans une page en arabe.
   function ltr(html) { return '<span dir="ltr">' + html + "</span>"; }
   // Même chose pour du texte brut (listes déroulantes, message WhatsApp) : « 911 Carrera » reste dans l'ordre.
-  function isolate(text) { return "⁦" + text + "⁩"; }
+  function isolate(text) { return "⁨" + text + "⁩"; }
+  // Nom de modèle : son sens d'écriture suit sa première lettre (« الفئة S » de droite à gauche, « 911 Carrera » de gauche à droite).
+  function auto(html) { return "<bdi>" + html + "</bdi>"; }
+  function carLabel(c) { return isolate(c.marque) + " " + isolate(modelName(c.modele)); }
   function plural(forms, n) {
     if (typeof forms === "string") return forms.replace("{n}", n);
     var rule = "other";
@@ -361,7 +364,7 @@
   function renderShowroomLabel() {
     var cat = STYLE_TO_CAT[showroomStyle];
     setHTML("#showroom-style", esc(t("fleet.filters." + cat)));
-    setHTML("#showroom-models", styleModels(showroomStyle).map(function (m) { return ltr(esc(m)); }).join('<span class="dot">·</span>'));
+    setHTML("#showroom-models", styleModels(showroomStyle).map(function (m) { return auto(esc(m)); }).join('<span class="dot">·</span>'));
   }
   function renderPaints() {
     setHTML("#paints", (S.peintures || []).map(function (p) {
@@ -401,7 +404,7 @@
         "</div>" +
         '<div class="car-body">' +
           '<p class="car-brand">' + ltr(esc(car.marque)) + "</p>" +
-          '<h3 class="car-model">' + ltr(esc(name)) + "</h3>" +
+          '<h3 class="car-model">' + auto(esc(name)) + "</h3>" +
           '<p class="car-desc">' + esc(t("fleet.cars." + car.id)) + "</p>" +
           '<ul class="car-specs">' + specs.join("") + "</ul>" +
           '<div class="car-foot">' +
@@ -435,7 +438,7 @@
       return '<li class="cf-car reveal" data-tilt style="--i:' + i + '">' + cardCover("cf", i, c.marque + " " + name) +
         '<div class="cf-media photo-slot" data-src="' + esc(c.photo) + '" data-alt="' + esc(c.marque + " " + name) + '">' + cardMore() + "</div>" +
         '<div class="cf-body"><span class="cf-type">' + esc(t("fleet.cat." + c.type)) + "</span>" +
-        '<h4 class="cf-name">' + ltr(esc(name)) + "</h4>" +
+        '<h4 class="cf-name">' + auto(esc(name)) + "</h4>" +
         '<span class="cf-brand">' + ltr(esc(c.marque)) + "</span></div></li>";
     }).join(""));
     photoSlots($("#chauffeur-fleet"));
@@ -542,10 +545,10 @@
     }).join("");
     vehicle.innerHTML = '<option value="">' + esc(t("booking.vehicleAny")) + "</option>" +
       '<optgroup label="' + esc(t("booking.services.rent")) + '">' + cars.map(function (c) {
-        return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + modelName(c.modele))) + "</option>";
+        return '<option value="' + esc(c.id) + '">' + esc(carLabel(c)) + "</option>";
       }).join("") + "</optgroup>" +
       '<optgroup label="' + esc(t("booking.services.chauffeur")) + '">' + chauffeurs.map(function (c) {
-        return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + modelName(c.modele))) + "</option>";
+        return '<option value="' + esc(c.id) + '">' + esc(carLabel(c)) + "</option>";
       }).join("") + "</optgroup>";
     service.value = sv;
     vehicle.value = vv;
@@ -581,7 +584,7 @@
     add(t("booking.fields.phone"), f("f-phone"));
     add(t("booking.fields.email"), f("f-email"));
     add(t("booking.fields.service"), t("booking.services." + f("f-service")));
-    add(t("booking.fields.vehicle"), car ? isolate(car.marque + " " + modelName(car.modele)) : t("booking.vehicleAny"));
+    add(t("booking.fields.vehicle"), car ? carLabel(car) : t("booking.vehicleAny"));
     add(t("booking.fields.from"), fmtDate(f("f-from")));
     add(t("booking.fields.to"), fmtDate(f("f-to")));
     if (f("f-message")) lines.push("", f("f-message"));
@@ -922,7 +925,7 @@
         : t("destinations.allYear"))));
       actions.push(sheetButton("book", t("destinations.cta"), true));
     } else if (kind === "car" || kind === "cf") {
-      title = ltr(esc(modelName(item.modele)));
+      title = auto(esc(modelName(item.modele)));
       kicker = ltr(esc(item.marque));
       ghost = item.embleme || item.modele;
       if (kind === "car") {

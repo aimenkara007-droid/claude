@@ -1000,7 +1000,7 @@ html[lang="ar"] .card-more { letter-spacing: 0; font-size: .74rem; }
   color: var(--ivory); cursor: pointer; transition: border-color .4s var(--ease), color .4s var(--ease), background-color .4s var(--ease);
 }
 .sheet-arrow:hover { border-color: var(--gold); color: var(--gold); }
-html[dir="rtl"] .sheet-arrow svg { transform: scaleX(-1); }
+html[dir="rtl"] :is(.sheet-arrow, .sheet-actions .btn) svg { transform: scaleX(-1); }
 .sheet-count { font-family: var(--brand); font-size: .74rem; letter-spacing: .2em; color: var(--ivory); text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
 
 /* Entrée : la photo se pose en douceur, les textes montent un à un. */
