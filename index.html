@@ -3,40 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jolie Vue — Salon de coiffure pour femmes</title>
-  <meta name="description" content="Jolie Vue, salon de coiffure pour femmes : coupe, couleur, balayage, soins et coiffures d'événement. Prestations, tarifs, horaires et prise de rendez-vous.">
-  <meta name="theme-color" content="#f7f1ea">
+  <title>Salon Jolie Vue — Institut de beauté à Oran</title>
+  <meta name="description" content="Salon Jolie Vue, institut de beauté pour femmes sur la frange maritime d’Oran : coiffure, colorations, soins capillaires, soins du visage, maquillage, manucure, épilations et massages. Tarifs, horaires et rendez-vous.">
+  <meta name="theme-color" content="#f6f2ec">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Jolie Vue — Salon de coiffure pour femmes">
-  <meta property="og:description" content="Coupe, couleur, balayage, soins et coiffures d'événement. Prenez rendez-vous.">
+  <meta property="og:locale" content="fr_DZ">
+  <meta property="og:site_name" content="Salon Jolie Vue">
+  <meta property="og:title" content="Salon Jolie Vue — Institut de beauté à Oran">
+  <meta property="og:description" content="Coiffure, soins, mise en beauté, onglerie, épilations et massages. Du samedi au jeudi, 9h30 – 17h30.">
   <meta property="og:image" content="images/accueil.jpg">
 
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <a class="skip" href="#contenu">Aller au contenu</a>
 
   <div class="draft-banner" id="draft-banner" hidden>
-    Version provisoire — les éléments <span class="todo">à compléter</span> attendent le contenu réel du salon.
+    Version provisoire — en attente des photos et du logo du salon.
   </div>
 
   <header class="site-header" id="haut">
     <div class="wrap header-inner">
-      <a class="logo" href="#haut" data-fill="nom"></a>
+      <a class="logo" href="#haut" data-logo>
+        <span class="logo-small" data-fill="mentionLogo"></span>
+        <span class="logo-name" data-fill="nom"></span>
+      </a>
       <button class="nav-toggle" aria-expanded="false" aria-controls="nav" aria-label="Ouvrir le menu">
         <span></span><span></span>
       </button>
       <nav class="nav" id="nav" aria-label="Navigation principale">
         <a href="#salon">Le salon</a>
         <a href="#prestations">Prestations</a>
-        <a href="#galerie">Galerie</a>
-        <a href="#infos">Infos pratiques</a>
-        <a class="btn btn-small" href="#rendez-vous">Prendre rendez-vous</a>
+        <a href="#galerie" id="nav-galerie">Galerie</a>
+        <a href="#avis" id="nav-avis">Avis</a>
+        <a href="#infos">Contact</a>
+        <a class="btn btn-ghost btn-small" href="#rendez-vous">Réserver</a>
       </nav>
     </div>
   </header>
@@ -45,56 +51,70 @@
 
     <!-- ACCUEIL -->
     <section class="hero">
-      <div class="wrap hero-inner">
-        <div class="hero-text">
-          <p class="eyebrow" data-fill="typeSalon"></p>
-          <h1 class="hero-title" data-fill="nom"></h1>
-          <p class="hero-slogan" data-fill="slogan"></p>
-          <div class="hero-actions">
-            <a class="btn" href="#rendez-vous">Prendre rendez-vous</a>
-            <a class="btn btn-ghost" href="#prestations">Voir les prestations</a>
+      <div class="wrap">
+        <div class="hero-inner">
+          <div class="hero-text">
+            <p class="eyebrow" data-fill="accroche"></p>
+            <h1 class="hero-title" data-fill="nom"></h1>
+            <p class="hero-slogan" data-fill="slogan"></p>
+            <div class="hero-actions">
+              <a class="btn" href="#rendez-vous">Prendre rendez-vous</a>
+              <a class="link-line" href="#prestations">Découvrir la carte</a>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="arch photo-slot" data-photo="accueil" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="hero-visual">
-          <div class="arch photo-slot" data-photo="accueil" aria-hidden="true"></div>
-          <div class="hero-ornament" aria-hidden="true"></div>
-        </div>
+        <div class="hero-info" id="hero-info"></div>
       </div>
     </section>
 
     <!-- LE SALON -->
     <section class="section" id="salon">
       <div class="wrap salon-grid">
-        <div class="salon-photo photo-slot" data-photo="salon" aria-hidden="true"></div>
-        <div>
+        <div class="salon-photo photo-slot reveal" data-photo="salon" aria-hidden="true"></div>
+        <div class="reveal">
           <p class="eyebrow">Le salon</p>
-          <h2 class="section-title">Un lieu pensé pour vous</h2>
+          <h2 class="section-title" data-fill="titreSalon"></h2>
           <div class="prose" id="presentation"></div>
         </div>
       </div>
       <div class="wrap">
-        <ul class="highlights" id="points-forts"></ul>
+        <ol class="highlights" id="points-forts"></ol>
+      </div>
+    </section>
+
+    <!-- MANIFESTE -->
+    <section class="manifesto">
+      <div class="wrap manifesto-inner reveal">
+        <p class="eyebrow eyebrow-center">Chez Jolie Vue</p>
+        <h2 class="manifesto-title" id="manifeste-titre"></h2>
+        <p class="manifesto-text" id="manifeste-texte"></p>
+        <ul class="univers" id="univers" aria-label="Nos univers"></ul>
       </div>
     </section>
 
     <!-- PRESTATIONS -->
-    <section class="section section-tinted" id="prestations">
+    <section class="section" id="prestations">
       <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Carte des soins</p>
+        <div class="section-head reveal">
+          <p class="eyebrow eyebrow-center">La carte</p>
           <h2 class="section-title">Prestations &amp; tarifs</h2>
         </div>
-        <div class="tabs" role="tablist" aria-label="Catégories de prestations" id="tabs"></div>
-        <div id="panels"></div>
+        <div class="carte">
+          <div class="tabs" role="tablist" aria-label="Catégories de prestations" id="tabs"></div>
+          <div class="panels" id="panels"></div>
+        </div>
         <p class="note" id="note-tarifs"></p>
       </div>
     </section>
 
     <!-- GALERIE -->
-    <section class="section" id="galerie">
+    <section class="section section-alt" id="galerie">
       <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">Réalisations</p>
+        <div class="section-head reveal">
+          <p class="eyebrow eyebrow-center">Réalisations</p>
           <h2 class="section-title">Galerie</h2>
         </div>
         <div class="gallery" id="gallery"></div>
@@ -102,12 +122,24 @@
       </div>
     </section>
 
+    <!-- AVIS -->
+    <section class="section" id="avis">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow eyebrow-center">Avis</p>
+          <h2 class="section-title">Elles sont passées chez nous</h2>
+        </div>
+        <div class="reviews" id="reviews"></div>
+      </div>
+    </section>
+
     <!-- RENDEZ-VOUS -->
     <section class="section booking" id="rendez-vous">
-      <div class="wrap booking-inner">
-        <p class="eyebrow">Rendez-vous</p>
+      <div class="wrap booking-inner reveal">
+        <p class="eyebrow eyebrow-center">Rendez-vous</p>
         <h2 class="section-title">Réservez votre moment</h2>
-        <p class="booking-lead">Appelez-nous ou réservez directement le créneau qui vous convient.</p>
+        <p class="booking-lead" id="booking-lead"></p>
+        <div class="booking-phones" id="booking-phones"></div>
         <div class="booking-actions" id="booking-actions"></div>
       </div>
     </section>
@@ -115,12 +147,12 @@
     <!-- INFOS PRATIQUES -->
     <section class="section" id="infos">
       <div class="wrap infos-grid">
-        <div>
+        <div class="reveal">
           <p class="eyebrow">Infos pratiques</p>
           <h2 class="section-title">Nous trouver</h2>
           <dl class="contact-list" id="contact-list"></dl>
         </div>
-        <div>
+        <div class="reveal">
           <h3 class="sub-title">Horaires</h3>
           <table class="hours" id="hours"></table>
         </div>
@@ -132,9 +164,13 @@
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
-      <p class="logo logo-footer" data-fill="nom"></p>
+      <a class="logo logo-footer" href="#haut" data-logo>
+        <span class="logo-small" data-fill="mentionLogo"></span>
+        <span class="logo-name" data-fill="nom"></span>
+      </a>
+      <p class="footer-line" id="footer-line"></p>
       <div class="socials" id="socials"></div>
-      <p class="small">© <span id="year"></span> <span data-fill="nom"></span> · <span data-fill="typeSalon"></span></p>
+      <p class="footer-copy">© <span id="year"></span> <span data-fill="nomOfficiel"></span></p>
     </div>
   </footer>
 

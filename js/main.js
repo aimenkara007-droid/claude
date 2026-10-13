@@ -2,30 +2,50 @@
 (function () {
   "use strict";
 
+  document.documentElement.classList.add("js");
+
   var S = window.SALON;
   var DRAFT = !!S.brouillon;
+  var C = S.contact || {};
+  var R = S.reseaux || {};
+  var P = S.photos || {};
 
   // ---------- Utilitaires ----------
   function isTodo(v) {
     return v == null || v === "" || (typeof v === "string" && /^\s*TODO/.test(v));
   }
+  function ok(v) { return !isTodo(v); }
   function esc(v) {
     return String(v).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  // Valeur affichable : texte échappé, ou repère « à compléter » en mode brouillon, ou "" sinon.
+  // Valeur affichable : texte échappé, repère « à compléter » en brouillon, ou "".
   function show(v) {
-    if (!isTodo(v)) return esc(v);
+    if (ok(v)) return esc(v);
     return DRAFT ? '<span class="todo">à compléter</span>' : "";
+  }
+  // Lien ; `label` doit déjà être du HTML sûr.
+  function link(href, label, cls, external) {
+    return "<a" + (cls ? ' class="' + cls + '"' : "") + ' href="' + esc(href) + '"' +
+      (external ? ' target="_blank" rel="noopener"' : "") + ">" + label + "</a>";
   }
   function $(sel) { return document.querySelector(sel); }
   function $all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function setHTML(sel, html) { var el = $(sel); if (el) el.innerHTML = html; return el; }
+  function hide(sel) { var el = $(sel); if (el) el.hidden = true; }
+  // Espaces insécables (utiles à l'affichage) remis en espaces simples pour Google.
+  function plain(v) { return String(v).replace(/\u00a0/g, " "); }
 
-  var C = S.contact;
-  var R = S.reseaux;
-  var adresseComplete = [C.adresse, [C.codePostal, C.ville].filter(function (x) { return !isTodo(x); }).join(" ")]
-    .filter(function (x) { return !isTodo(x); }).join(", ");
+  // ---------- Données dérivées ----------
+  var phones = (C.telephones || []).filter(function (t) { return ok(t.lien); });
+  var villeCP = [C.codePostal, C.ville].filter(ok).join(" ");
+  var hasAddress = ok(C.adresse) && ok(C.ville);
+  var adresseLigne = [C.adresse, C.quartier, villeCP].filter(ok).join(", ");
+  var itineraire = C.googleMaps || (hasAddress
+    ? "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(plain(S.nomOfficiel + ", " + adresseLigne))
+    : null);
+  var instaHandle = R.instagram ? (R.instagram.match(/instagram\.com\/([^\/?#]+)/) || [])[1] : null;
 
   // ---------- Champs simples ----------
   $all("[data-fill]").forEach(function (el) {
@@ -34,22 +54,62 @@
   if (DRAFT) $("#draft-banner").hidden = false;
   $("#year").textContent = new Date().getFullYear();
 
-  // ---------- Présentation ----------
-  $("#presentation").innerHTML = S.presentation
-    .filter(function (p) { return DRAFT || !isTodo(p); })
-    .map(function (p) { return "<p>" + show(p) + "</p>"; }).join("");
+  // ---------- Logo image (remplace le logo texte si le fichier existe) ----------
+  if (P.logo) {
+    var probe = new Image();
+    probe.onload = function () {
+      $all("[data-logo]").forEach(function (el) {
+        el.innerHTML = '<img src="' + esc(P.logo) + '" alt="' + esc(S.nomOfficiel) + '">';
+        el.classList.add("has-logo");
+      });
+    };
+    probe.src = P.logo;
+  }
 
-  $("#points-forts").innerHTML = S.pointsForts
-    .filter(function (p) { return DRAFT || !isTodo(p.titre); })
+  // ---------- Bandeau d'infos sous le titre ----------
+  var infos = [];
+  if (ok(C.quartier) || ok(C.ville)) infos.push(esc([C.quartier, C.ville].filter(ok).join(", ")));
+  if (ok(S.horairesResume)) infos.push(esc(S.horairesResume));
+  if (phones[0]) infos.push(link("tel:" + phones[0].lien, esc(phones[0].affiche)));
+  setHTML("#hero-info", infos.map(function (x) { return "<p>" + x + "</p>"; }).join(""));
+
+  // ---------- Le salon ----------
+  setHTML("#presentation", (S.presentation || [])
+    .filter(function (p) { return DRAFT || ok(p); })
+    .map(function (p) { return "<p>" + show(p) + "</p>"; }).join(""));
+
+  var ROMAN = ["I", "II", "III", "IV", "V", "VI"];
+  setHTML("#points-forts", (S.pointsForts || [])
+    .filter(function (p) { return DRAFT || ok(p.titre); })
     .map(function (p, i) {
-      return '<li class="reveal"><span class="hl-num">0' + (i + 1) + "</span>" +
+      return '<li class="reveal" style="--i:' + i + '"><span class="hl-num">' + ROMAN[i] + "</span>" +
         "<h3>" + show(p.titre) + "</h3><p>" + show(p.texte) + "</p></li>";
-    }).join("");
+    }).join(""));
 
-  // ---------- Prestations (onglets) ----------
+  var M = S.manifeste || {};
+  setHTML("#manifeste-titre", show(M.titre));
+  setHTML("#manifeste-texte", show(M.texte));
+
+  // ---------- Prestations ----------
+  // Hors brouillon, les prestations sans nom et les catégories vides disparaissent.
+  var cats = (S.prestations || []).map(function (cat) {
+    var groups = (cat.groupes || [{ titre: null, items: cat.items || [] }]).map(function (g) {
+      return { titre: g.titre, items: (g.items || []).filter(function (it) { return DRAFT || ok(it.nom); }) };
+    }).filter(function (g) { return g.items.length; });
+    return { nom: cat.categorie, groups: groups };
+  }).filter(function (c) { return c.groups.length; });
+
+  function renderItem(it) {
+    var prix = ok(it.prix) ? esc(it.prix) : (DRAFT ? show(it.prix) : "Sur demande");
+    return '<li class="menu-item"><span class="menu-name">' + show(it.nom) +
+      (ok(it.duree) ? '<span class="menu-duree">' + esc(it.duree) + "</span>" : "") +
+      (it.detail && (DRAFT || ok(it.detail)) ? '<span class="menu-meta">' + show(it.detail) + "</span>" : "") +
+      '</span><span class="menu-price">' + prix + "</span></li>";
+  }
+
   var tabs = $("#tabs");
   var panels = $("#panels");
-  S.prestations.forEach(function (cat, i) {
+  cats.forEach(function (cat, i) {
     var id = "cat-" + i;
     var tab = document.createElement("button");
     tab.className = "tab";
@@ -59,7 +119,7 @@
     tab.setAttribute("aria-controls", id);
     tab.setAttribute("aria-selected", i === 0 ? "true" : "false");
     tab.tabIndex = i === 0 ? 0 : -1;
-    tab.textContent = cat.categorie;
+    tab.textContent = cat.nom;
     tabs.appendChild(tab);
 
     var panel = document.createElement("div");
@@ -67,28 +127,29 @@
     panel.id = id;
     panel.setAttribute("role", "tabpanel");
     panel.setAttribute("aria-labelledby", tab.id);
+    panel.tabIndex = 0;
     panel.hidden = i !== 0;
-    panel.innerHTML = '<ul class="menu">' + cat.items.map(function (it) {
-      var meta = [];
-      if (!isTodo(it.duree)) meta.push(esc(it.duree));
-      if (it.detail) meta.push(show(it.detail));
-      return '<li class="menu-item">' +
-        '<div class="menu-line"><span class="menu-name">' + show(it.nom) + '</span>' +
-        '<span class="menu-dots" aria-hidden="true"></span>' +
-        '<span class="menu-price">' + (isTodo(it.prix) ? (DRAFT ? show(it.prix) : "sur demande") : esc(it.prix)) + "</span></div>" +
-        (meta.length ? '<p class="menu-meta">' + meta.join(" · ") + "</p>" : "") +
-        "</li>";
-    }).join("") + "</ul>";
+    panel.innerHTML = '<h3 class="panel-title">' + esc(cat.nom) + "</h3>" + cat.groups.map(function (g) {
+      return '<div class="menu-group">' +
+        (g.titre ? '<h4 class="menu-group-title">' + esc(g.titre) + "</h4>" : "") +
+        '<ul class="menu">' + g.items.map(renderItem).join("") + "</ul></div>";
+    }).join("");
     panels.appendChild(panel);
   });
 
-  function selectTab(tab) {
+  function selectTab(tab, focus) {
+    if (!tab) return;
     $all(".tab").forEach(function (t) {
       var on = t === tab;
       t.setAttribute("aria-selected", on ? "true" : "false");
       t.tabIndex = on ? 0 : -1;
       document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
     });
+    if (focus) tab.focus();
+    // Sur mobile, les onglets défilent horizontalement : on centre l'onglet actif.
+    if (tabs.scrollWidth > tabs.clientWidth) {
+      tabs.scrollTo({ left: tab.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
+    }
   }
   tabs.addEventListener("click", function (e) {
     var t = e.target.closest(".tab");
@@ -99,114 +160,184 @@
     var i = list.indexOf(document.activeElement);
     if (i < 0) return;
     var next = null;
-    if (e.key === "ArrowRight") next = list[(i + 1) % list.length];
-    if (e.key === "ArrowLeft") next = list[(i - 1 + list.length) % list.length];
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") next = list[(i + 1) % list.length];
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = list[(i - 1 + list.length) % list.length];
     if (e.key === "Home") next = list[0];
     if (e.key === "End") next = list[list.length - 1];
-    if (next) { e.preventDefault(); next.focus(); selectTab(next); }
+    if (next) { e.preventDefault(); selectTab(next, true); }
   });
 
-  $("#note-tarifs").innerHTML = show(S.noteTarifs);
+  // Liens « univers » du manifeste : ouvrent l'onglet correspondant.
+  setHTML("#univers", cats.map(function (c, i) {
+    return '<li><a href="#prestations" data-tab="' + i + '">' + esc(c.nom) + "</a></li>";
+  }).join(""));
+  $("#univers").addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-tab]");
+    if (a) selectTab(document.getElementById("tab-cat-" + a.getAttribute("data-tab")));
+  });
 
-  // ---------- Photos (avec repli décoratif si le fichier manque) ----------
-  function loadPhoto(el, src, alt) {
-    if (!src) return;
-    var img = new Image();
-    img.onload = function () {
-      img.alt = alt || "";
-      img.loading = "lazy";
-      el.appendChild(img);
-      el.classList.add("has-photo");
-    };
+  setHTML("#note-tarifs", show(S.noteTarifs));
+
+  // ---------- Photos (repli décoratif tant que le fichier manque) ----------
+  function addPhoto(el, src, alt, opts) {
+    opts = opts || {};
+    if (!src) { if (opts.onFail) opts.onFail(); return; }
+    var img = document.createElement("img");
+    img.alt = alt || "";
+    img.decoding = "async";
+    if (opts.lazy) img.loading = "lazy";
+    img.onload = function () { el.classList.add("has-photo"); };
+    img.onerror = function () { img.remove(); if (opts.onFail) opts.onFail(); };
+    el.appendChild(img);
     img.src = src;
   }
   $all("[data-photo]").forEach(function (el) {
-    loadPhoto(el, S.photos[el.getAttribute("data-photo")], "");
+    var key = el.getAttribute("data-photo");
+    addPhoto(el, P[key], "", { lazy: key !== "accueil" });
   });
 
   var gallery = $("#gallery");
-  S.photos.galerie.forEach(function (src, i) {
+  function layoutGallery() {
+    var n = gallery.children.length;
+    gallery.classList.toggle("is-mosaic", n === 6); // mosaïque prévue pour 6 photos
+    if (!n && !DRAFT) { hide("#galerie"); hide("#nav-galerie"); }
+  }
+  (P.galerie || []).forEach(function (src, i) {
     var fig = document.createElement("figure");
     fig.className = "gallery-item photo-slot reveal";
-    fig.style.setProperty("--i", i);
+    fig.style.setProperty("--i", i % 3);
     gallery.appendChild(fig);
-    loadPhoto(fig, src, "Réalisation du salon " + S.nom + " n°" + (i + 1));
+    addPhoto(fig, src, "Réalisation du " + S.nomOfficiel + " (" + (i + 1) + ")", {
+      lazy: true,
+      onFail: function () { if (!DRAFT) { fig.remove(); layoutGallery(); } },
+    });
   });
+  layoutGallery();
 
-  $("#insta-cta").innerHTML = R.instagram
-    ? '<a class="btn btn-ghost" href="' + esc(R.instagram) + '" target="_blank" rel="noopener">Plus de réalisations sur Instagram</a>'
-    : (DRAFT ? 'Lien Instagram : <span class="todo">à compléter</span>' : "");
+  setHTML("#insta-cta", R.instagram
+    ? link(R.instagram, "Suivre @" + esc(instaHandle || "instagram") + " sur Instagram", "link-line", true)
+    : (DRAFT ? 'Lien Instagram : <span class="todo">à compléter</span>' : ""));
+
+  // ---------- Avis ----------
+  var avis = (S.avis || []).filter(ok);
+  if (avis.length) {
+    setHTML("#reviews", avis.map(function (t, i) {
+      return '<figure class="review reveal" style="--i:' + i + '"><blockquote><p>' + esc(t) + "</p></blockquote></figure>";
+    }).join(""));
+  } else {
+    hide("#avis");
+    hide("#nav-avis");
+  }
 
   // ---------- Rendez-vous ----------
+  setHTML("#booking-lead", show(S.texteRendezVous));
+  setHTML("#booking-phones", phones.map(function (t) {
+    return '<a class="phone" href="tel:' + esc(t.lien) + '">' +
+      (t.libelle ? '<span class="phone-label">' + esc(t.libelle) + "</span>" : "") +
+      '<span class="phone-number">' + esc(t.affiche) + "</span></a>";
+  }).join("") || show(null));
+
   var actions = [];
-  if (C.reservationEnLigne) {
-    actions.push('<a class="btn" href="' + esc(C.reservationEnLigne) + '" target="_blank" rel="noopener">Réserver en ligne</a>');
+  function addAction(href, label) {
+    actions.push(link(href, label, actions.length ? "btn btn-outline-light" : "btn btn-light", true));
   }
-  if (C.telephoneLien) {
-    actions.push('<a class="btn ' + (actions.length ? "btn-ghost" : "") + '" href="tel:' + esc(C.telephoneLien) + '">Appeler le ' + esc(C.telephone) + "</a>");
-  }
-  if (C.whatsapp) {
-    actions.push('<a class="btn btn-ghost" href="https://wa.me/' + esc(C.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a>');
-  }
-  $("#booking-actions").innerHTML = actions.length ? actions.join("")
-    : (DRAFT ? '<p>Téléphone / lien de réservation : <span class="todo">à compléter</span></p>' : "");
+  if (C.reservationEnLigne) addAction(C.reservationEnLigne, "Réserver en ligne");
+  if (R.messageInstagram) addAction(R.messageInstagram, "Écrire sur Instagram");
+  if (C.whatsapp) addAction("https://wa.me/" + C.whatsapp, "WhatsApp");
+  setHTML("#booking-actions", actions.join(""));
 
   // ---------- Contact ----------
   var rows = [];
-  rows.push(["Adresse", DRAFT && isTodo(C.adresse) ? show(C.adresse) : esc(adresseComplete)]);
-  rows.push(["Téléphone", C.telephoneLien
-    ? '<a href="tel:' + esc(C.telephoneLien) + '">' + esc(C.telephone) + "</a>" : show(C.telephone)]);
-  if (C.email || DRAFT) {
-    rows.push(["E-mail", C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : show(C.email)]);
-  }
-  $("#contact-list").innerHTML = rows
-    .filter(function (r) { return r[1]; })
-    .map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("");
+  var addr = [ok(C.adresse) ? esc(C.adresse) : show(C.adresse), esc([C.quartier, villeCP].filter(ok).join(" — "))]
+    .filter(Boolean).join("<br>");
+  if (itineraire) addr += "<br>" + link(itineraire, "Itinéraire", "link-line link-small", true);
+  rows.push(["Adresse", addr]);
+  rows.push(["Téléphone", phones.length ? phones.map(function (t) {
+    return link("tel:" + t.lien, esc(t.affiche)) + (t.libelle ? '<span class="muted">' + esc(t.libelle) + "</span>" : "");
+  }).join("<br>") : show(null)]);
+  if (C.email || DRAFT) rows.push(["E-mail", C.email ? link("mailto:" + C.email, esc(C.email)) : show(null)]);
+  if (R.instagram) rows.push(["Instagram", link(R.instagram, "@" + esc(instaHandle || "instagram"), "", true)]);
+  setHTML("#contact-list", rows.filter(function (r) { return r[1]; }).map(function (r) {
+    return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>";
+  }).join(""));
 
-  // ---------- Horaires (jour courant mis en avant) ----------
-  var today = (new Date().getDay() + 6) % 7; // 0 = lundi
-  $("#hours").innerHTML = "<tbody>" + S.horaires.map(function (h, i) {
-    var closed = /ferm/i.test(h.heures);
-    return '<tr class="' + (i === today ? "is-today " : "") + (closed ? "is-closed" : "") + '">' +
-      "<th scope=\"row\">" + esc(h.jour) + (i === today ? ' <span class="today-tag">aujourd\'hui</span>' : "") + "</th>" +
+  // ---------- Horaires (jour en cours mis en avant, à l'heure d'Oran) ----------
+  var JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  var today = JOURS[new Date().getDay()];
+  try {
+    if (S.fuseau) {
+      today = new Intl.DateTimeFormat("fr-FR", { weekday: "long", timeZone: S.fuseau }).format(new Date()).toLowerCase();
+    }
+  } catch (e) { /* fuseau non reconnu : jour local */ }
+  setHTML("#hours", "<tbody>" + (S.horaires || []).map(function (h) {
+    var isToday = String(h.jour).trim().toLowerCase() === today;
+    var closed = /ferm/i.test(h.heures || "");
+    return '<tr class="' + (isToday ? "is-today " : "") + (closed ? "is-closed" : "") + '">' +
+      '<th scope="row">' + esc(h.jour) + (isToday ? '<span class="today-tag">Aujourd’hui</span>' : "") + "</th>" +
       "<td>" + show(h.heures) + "</td></tr>";
-  }).join("") + "</tbody>";
+  }).join("") + "</tbody>");
 
   // ---------- Carte ----------
-  if (!isTodo(C.adresse) && !isTodo(C.ville)) {
-    $("#map").innerHTML = '<iframe title="Plan d\'accès" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=' +
-      encodeURIComponent(S.nom + " " + adresseComplete) + '&output=embed"></iframe>';
+  if (hasAddress) {
+    setHTML("#map", '<iframe title="Plan d’accès au ' + esc(S.nomOfficiel) + '" loading="lazy" ' +
+      'referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=' +
+      encodeURIComponent(plain(S.nomOfficiel + ", " + [C.adresse, C.ville].join(", "))) + '&output=embed"></iframe>');
+  } else if (DRAFT) {
+    setHTML("#map", '<div class="map-empty">Le plan s’affichera ici dès que l’adresse sera renseignée.</div>');
   } else {
-    $("#map").innerHTML = '<div class="map-empty">Le plan s\'affichera ici dès que l\'adresse sera renseignée.</div>';
+    $("#map").remove();
   }
 
-  // ---------- Réseaux ----------
+  // ---------- Pied de page ----------
+  setHTML("#footer-line", [esc([C.quartier, C.ville].filter(ok).join(", ")), ok(S.horairesResume) ? esc(S.horairesResume) : ""]
+    .filter(Boolean).join("<br>"));
+
   var icons = {
     instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" class="fill"/></svg>',
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></svg>',
     tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3c.4 2.6 2 4.2 5 4.5v3.5c-1.9 0-3.6-.6-5-1.6V15a6 6 0 1 1-6-6v3.6A2.5 2.5 0 1 0 11.5 15V3H15z"/></svg>',
   };
-  $("#socials").innerHTML = Object.keys(icons).filter(function (k) { return R[k]; }).map(function (k) {
-    return '<a href="' + esc(R[k]) + '" target="_blank" rel="noopener" aria-label="' + k + '">' + icons[k] + "</a>";
-  }).join("");
+  var NOMS = { instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok" };
+  setHTML("#socials", Object.keys(icons).filter(function (k) { return R[k]; }).map(function (k) {
+    return '<a href="' + esc(R[k]) + '" target="_blank" rel="noopener" aria-label="' + NOMS[k] + '">' + icons[k] + "</a>";
+  }).join(""));
 
   // ---------- Barre mobile ----------
   var bar = [];
-  if (C.telephoneLien) bar.push('<a href="tel:' + esc(C.telephoneLien) + '">Appeler</a>');
-  bar.push(C.reservationEnLigne
-    ? '<a class="is-primary" href="' + esc(C.reservationEnLigne) + '" target="_blank" rel="noopener">Réserver</a>'
-    : '<a class="is-primary" href="#rendez-vous">Réserver</a>');
-  $("#mobile-bar").innerHTML = bar.join("");
+  if (phones[0]) bar.push(link("tel:" + phones[0].lien, "Appeler", "is-primary"));
+  if (C.reservationEnLigne) bar.push(link(C.reservationEnLigne, "Réserver", "", true));
+  else if (C.whatsapp) bar.push(link("https://wa.me/" + C.whatsapp, "WhatsApp", "", true));
+  else if (R.messageInstagram) bar.push(link(R.messageInstagram, "Message", "", true));
+  else bar.push(link("#prestations", "Tarifs"));
+  setHTML("#mobile-bar", bar.join(""));
 
   // ---------- Données structurées (référencement Google) ----------
-  var ld = { "@context": "https://schema.org", "@type": "HairSalon", name: S.nom };
-  if (!isTodo(C.adresse)) {
-    ld.address = { "@type": "PostalAddress", streetAddress: C.adresse, postalCode: isTodo(C.codePostal) ? undefined : C.codePostal,
-      addressLocality: isTodo(C.ville) ? undefined : C.ville, addressCountry: C.pays || "FR" };
+  var DAYS = { lundi: "Monday", mardi: "Tuesday", mercredi: "Wednesday", jeudi: "Thursday",
+    vendredi: "Friday", samedi: "Saturday", dimanche: "Sunday" };
+  function hhmm(h, m) { return ("0" + h).slice(-2) + ":" + (m || "00"); }
+  var specs = {};
+  (S.horaires || []).forEach(function (h) {
+    var m = String(h.heures || "").match(/(\d{1,2})\s*h\s*(\d{2})?\D+?(\d{1,2})\s*h\s*(\d{2})?/i);
+    var day = DAYS[String(h.jour).trim().toLowerCase()];
+    if (!m || !day) return;
+    var key = hhmm(m[1], m[2]) + "-" + hhmm(m[3], m[4]);
+    (specs[key] = specs[key] || []).push(day);
+  });
+
+  var ld = { "@context": "https://schema.org", "@type": ["BeautySalon", "HairSalon"], name: S.nomOfficiel };
+  if (ok(S.siteWeb)) ld.url = S.siteWeb;
+  if (ok(C.adresse)) {
+    ld.address = { "@type": "PostalAddress", streetAddress: plain(C.adresse),
+      postalCode: ok(C.codePostal) ? C.codePostal : undefined,
+      addressLocality: ok(C.ville) ? C.ville : undefined, addressCountry: C.pays || undefined };
   }
-  if (C.telephoneLien) ld.telephone = C.telephoneLien;
+  if (phones[0]) ld.telephone = phones[0].lien;
   if (C.email) ld.email = C.email;
-  var same = Object.keys(R).map(function (k) { return R[k]; }).filter(Boolean);
+  var hoursSpec = Object.keys(specs).map(function (k) {
+    return { "@type": "OpeningHoursSpecification", dayOfWeek: specs[k], opens: k.split("-")[0], closes: k.split("-")[1] };
+  });
+  if (hoursSpec.length) ld.openingHoursSpecification = hoursSpec;
+  var same = ["instagram", "facebook", "tiktok"].map(function (k) { return R[k]; }).filter(Boolean);
   if (same.length) ld.sameAs = same;
   var ldTag = document.createElement("script");
   ldTag.type = "application/ld+json";
@@ -230,6 +361,9 @@
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") setMenu(false);
   });
+  var desktop = window.matchMedia("(min-width: 961px)");
+  function onDesktop(e) { if (e.matches) setMenu(false); }
+  if (desktop.addEventListener) desktop.addEventListener("change", onDesktop); else desktop.addListener(onDesktop);
 
   // ---------- En-tête au défilement ----------
   var header = $(".site-header");
@@ -239,14 +373,15 @@
 
   // ---------- Apparition douce ----------
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var revealEls = $all(".reveal");
   if ("IntersectionObserver" in window && !reduce) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); }
       });
-    }, { rootMargin: "0px 0px -8% 0px" });
-    $all(".reveal").forEach(function (el) { io.observe(el); });
+    }, { rootMargin: "0px 0px -6% 0px" });
+    revealEls.forEach(function (el) { io.observe(el); });
   } else {
-    $all(".reveal").forEach(function (el) { el.classList.add("is-visible"); });
+    revealEls.forEach(function (el) { el.classList.add("is-visible"); });
   }
 })();
