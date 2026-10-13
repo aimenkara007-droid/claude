@@ -11,6 +11,7 @@ window.NS = {
 
   nomOfficiel: "Napoléon Services",
   siteWeb: "https://www.napoleonservices.com/",
+  fondation: 2014,
 
   // Ordre du sélecteur de langue. Une langue absente de js/i18n/ est ignorée.
   langues: ["fr", "en", "ar", "es", "it", "ru", "zh"],
@@ -35,25 +36,95 @@ window.NS = {
   // Du lundi au dimanche : "09:00-19:00", "24h" ou "ferme". null = à compléter.
   horaires: null,
 
-  // Fichiers à déposer dans images/. Si une photo manque, un décor la remplace.
+  // Villes où les véhicules sont aussi disponibles (noms traduits dans js/i18n → cities).
+  villes: ["paris", "geneve", "cannes", "monaco", "londres", "losangeles", "newyork"],
+
   photos: {
-    logo: "images/logo.png",           // facultatif : remplace l'emblème N
-    accueil: "images/accueil.jpg",     // grande photo d'accueil (paysage, ~2400×1400)
-    chauffeur: "images/chauffeur.jpg", // section « Avec chauffeur » (portrait, ~1200×1500)
-    maison: "images/maison.jpg",       // section « La Maison » (portrait, ~1200×1500)
+    logo: "images/logo.png",                         // facultatif : remplace l'emblème N
+    chauffeur: "images/ambiance/chauffeur-gants.jpg",
+    reservation: "images/ambiance/porsche-nuit.jpg",
+    conciergerie: "images/ambiance/piscine.jpg",     // bandeau derrière le titre « Conciergerie »
+    fondateur: "images/equipe/nassim-kara.jpg",
   },
 
-  // Flotte. `categorie` : "suv", "sedan" ou "sport". Le texte de chaque modèle
-  // est dans js/i18n/<langue>.js → fleet.cars.<id>.
+  // Flotte en location. `categorie` : "suv", "sedan", "coupe" ou "compact".
+  // `modele` : nom international ; une langue peut le traduire (fleet.modelNames).
+  // Le texte de chaque modèle est dans js/i18n/<langue>.js → fleet.cars.<id>.
   // `prix` : null = « Sur demande », sinon texte libre (ex. "dès 950 € / jour").
   flotte: [
+    { id: "s", marque: "Mercedes-Benz", modele: "S-Class", embleme: "S", categorie: "sedan", places: 5, prix: null, photo: "images/flotte/classe-s.jpg" },
+    { id: "cls", marque: "Mercedes-Benz", modele: "CLS", embleme: "CLS", categorie: "sedan", places: 4, prix: null, photo: "images/flotte/cls.jpg" },
     { id: "g63", marque: "Mercedes-AMG", modele: "G 63", embleme: "G 63", categorie: "suv", places: 5, prix: null, photo: "images/flotte/g63.jpg" },
+    { id: "gle", marque: "Mercedes-Benz", modele: "GLE", embleme: "GLE", categorie: "suv", places: 5, prix: null, photo: "images/flotte/gle.jpg" },
     { id: "rrvogue", marque: "Land Rover", modele: "Range Rover Vogue", embleme: "Vogue", categorie: "suv", places: 5, prix: null, photo: "images/flotte/range-rover-vogue.jpg" },
     { id: "rrsport", marque: "Land Rover", modele: "Range Rover Sport", embleme: "Sport", categorie: "suv", places: 5, prix: null, photo: "images/flotte/range-rover-sport.jpg" },
-    { id: "gle", marque: "Mercedes-Benz", modele: "GLE", embleme: "GLE", categorie: "suv", places: 5, prix: null, photo: "images/flotte/gle.jpg" },
-    // CLS : 4 places avant 2018, 5 places depuis — à vérifier selon le modèle loué.
-    { id: "cls", marque: "Mercedes-Benz", modele: "CLS", embleme: "CLS", categorie: "sedan", places: "TODO", prix: null, photo: "images/flotte/cls.jpg" },
-    { id: "carrera", marque: "Porsche", modele: "911 Carrera", embleme: "911", categorie: "sport", places: 4, prix: null, photo: "images/flotte/911-carrera.jpg" },
+    { id: "carrera", marque: "Porsche", modele: "911 Carrera Cabriolet", embleme: "911", categorie: "coupe", places: 4, prix: null, photo: "images/flotte/911-carrera.jpg" },
+    { id: "ccoupe", marque: "Mercedes-Benz", modele: "C-Class Coupé", embleme: "C", categorie: "coupe", places: 4, prix: null, photo: "images/flotte/classe-c-coupe.jpg" },
+    { id: "a", marque: "Mercedes-Benz", modele: "A-Class", embleme: "A", categorie: "compact", places: 5, prix: null, photo: "images/flotte/classe-a.jpg" },
+  ],
+
+  // Flotte avec chauffeur (« à la journée ou à la course »).
+  // `type` : "sedan", "suv" ou "van" (libellés traduits dans fleet.cat).
+  chauffeurs: [
+    { id: "s-chauffeur", marque: "Mercedes-Benz", modele: "S-Class · S 350 · S 500", type: "sedan", photo: "images/flotte/classe-s.jpg" },
+    { id: "e-chauffeur", marque: "Mercedes-Benz", modele: "E-Class", type: "sedan", photo: "images/chauffeur/classe-e.jpg" },
+    { id: "c-chauffeur", marque: "Mercedes-Benz", modele: "C-Class", type: "sedan", photo: "images/chauffeur/classe-c.jpg" },
+    { id: "gle-chauffeur", marque: "Mercedes-Benz", modele: "GLE", type: "suv", photo: "images/flotte/gle.jpg" },
+    { id: "v-chauffeur", marque: "Mercedes-Benz", modele: "V-Class", type: "van", photo: "images/chauffeur/classe-v.jpg" },
+  ],
+
+  // Destinations (noms traduits dans js/i18n → destinations.names), en deux rangées défilantes.
+  destinations: [
+    "paris", "saint-tropez", "monaco", "cannes", "courchevel", "gstaad", "geneve", "londres", "milan", "rome",
+    "porto-cervo", "mykonos", "ibiza", "palma", "saint-barthelemy",
+    "new-york", "miami", "los-angeles", "tulum", "mexico", "rio", "florianopolis", "punta-del-este",
+    "le-cap", "phuket", "singapour", "hong-kong", "shanghai", "tokyo",
+  ],
+
+  // Adresses mises en avant par la conciergerie (noms propres, non traduits).
+  hotels: [
+    { nom: "Plaza Athénée", photo: "images/hotels/plaza-athenee.jpg" },
+    { nom: "L’Apogée", photo: "images/hotels/lapogee.jpg" },
+    { nom: "L’Auberge", photo: "images/hotels/lauberge.jpg" },
+  ],
+
+  // Jets privés et yachts (noms de modèles, non traduits). photo: null = carte sans photo.
+  jets: [
+    { nom: "Gulfstream GV", type: "jet", photo: "images/jets/gulfstream-gv.jpg" },
+    { nom: "Cessna Citation CJ3", type: "jet", photo: "images/jets/cessna-cj3.jpg" },
+    { nom: "Falcon 200", type: "jet", photo: null },
+    { nom: "Princess 115", type: "yacht", photo: "images/yachts/princess-115.jpg" },
+    { nom: "Mangusta 105", type: "yacht", photo: "images/yachts/mangusta-105.jpg" },
+    { nom: "Riva 100", type: "yacht", photo: "images/yachts/riva-100.jpg" },
+    { nom: "Sunseeker Predator 92", type: "yacht", photo: "images/yachts/sunseeker-predator-92.jpg" },
+    { nom: "Pershing 90", type: "yacht", photo: "images/yachts/pershing-90.jpg" },
+    { nom: "Azimut 68S", type: "yacht", photo: "images/yachts/azimut-68s.jpg" },
+  ],
+
+  // Cartes de membre présentées sur l'ancien site.
+  cartes: ["Premium", "Gold", "Black"],
+
+  // Témoignages de partenaires, cités dans leur langue d'origine (anglais).
+  temoignages: [
+    {
+      texte: "The hotel Prince de Galles confirms that the professional relation with Mr. Kara Nassim of Napoleon Services has always been outstanding and serious.",
+      auteur: "Leon Reinard", role: "Front Office Manager", societe: "Prince de Galles",
+    },
+    {
+      texte: "We consider the partnership with Napoleon Services to be a mutual benefit to our respective business.",
+      auteur: "Trond Sorensen", role: "Chief Sales Officer", societe: "Onyx",
+    },
+  ],
+
+  fondateur: { nom: "Nassim Kara" },
+
+  // Teintes du showroom 3D (les noms sont traduits dans showroom.paints).
+  peintures: [
+    { id: "obsidian", hex: "#0e0f12" },
+    { id: "silver", hex: "#b9bdc3" },
+    { id: "champagne", hex: "#c7ae84" },
+    { id: "midnight", hex: "#16223d" },
+    { id: "pearl", hex: "#ebe8e2" },
   ],
 
   // Mentions légales (obligatoires en France). Affichées en français dans toutes les langues.

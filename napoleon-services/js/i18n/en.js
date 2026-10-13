@@ -17,6 +17,7 @@
     language: "Language",
     todo: "to be completed",
     draft: "Draft version — photos and details being added",
+    drag: "Drag",
   },
 
   nav: {
@@ -26,6 +27,8 @@
     house: "The House",
     contact: "Contact",
     book: "Book",
+    jets: "Jets & yachts",
+    destinations: "Destinations",
   },
 
   hero: {
@@ -35,6 +38,7 @@
     ctaBook: "Book now",
     ctaFleet: "Discover the fleet",
     scroll: "Scroll",
+    rotator: ["Prestige car rental", "Private chauffeur", "Hotels & palaces", "Jets & yachts"],
   },
 
   marquee: ["Chauffeur service", "Self-drive", "VIP welcome", "Private jet", "Yacht", "Villas", "Hotels & palaces"],
@@ -50,12 +54,26 @@
     ],
   },
 
+  stats: {
+    since: "Founded",
+    cities: { one: "city", other: "cities" },
+    vehicles: { one: "model", other: "models" },
+    destinations: { one: "destination", other: "destinations" },
+    jets: { one: "jet or yacht", other: "jets & yachts" },
+  },
+
   fleet: {
     eyebrow: "The fleet",
     title: "*Exceptional* automobiles",
-    lead: "SUVs, saloons and sports cars from the greatest marques, available with or without a chauffeur.",
-    filters: { all: "Entire fleet", suv: "SUVs", sedan: "Saloons", sport: "Sports cars" },
-    cat: { suv: "SUV", sedan: "Saloon", sport: "Sports car" },
+    lead: "Saloons, SUVs, coupés, convertibles and compacts from the greatest marques, available with or without a chauffeur.",
+    filters: {
+      all: "Entire fleet",
+      suv: "SUVs",
+      sedan: "Saloons",
+      coupe: "Coupés & convertibles",
+      compact: "Compacts",
+    },
+    cat: { suv: "SUV", sedan: "Saloon", coupe: "Coupé / convertible", compact: "Compact", van: "Van" },
     seats: { one: "{n} seat", other: "{n} seats" },
     chauffeur: "With or without chauffeur",
     price: "Rate",
@@ -68,7 +86,23 @@
       rrsport: "All of Range Rover’s sporting character, with no compromise on comfort.",
       gle: "Mercedes-Benz’s large SUV: space, comfort and technology for every journey.",
       cls: "Mercedes-Benz’s four-door coupé, where elegance meets dynamism.",
-      carrera: "The benchmark sports car since 1963 — experience Paris behind the wheel of a legend.",
+      carrera: "The benchmark sports car since 1963 — here as a convertible, to enjoy Paris under open skies.",
+      s: "The benchmark luxury saloon: silence, sovereign comfort and cutting-edge technology.",
+      ccoupe: "The elegance of a Mercedes-Benz coupé, for getaways for two.",
+      a: "Compact and refined, ideal for gliding discreetly through Paris.",
+    },
+  },
+
+  showroom: {
+    kicker: "3D showroom",
+    hint: "Drag to rotate the car",
+    paint: "Colour",
+    paints: {
+      obsidian: "Obsidian black",
+      silver: "Lunar silver",
+      champagne: "Champagne",
+      midnight: "Midnight blue",
+      pearl: "Pearl white",
     },
   },
 
@@ -82,8 +116,53 @@
       { title: "Events", text: "Evenings, weddings, fashion shows, galas: an arrival worthy of the occasion." },
       { title: "Business travel", text: "Meetings, roadshows, delegations: a reliable service for your teams and guests." },
     ],
-    typesLabel: "Our chauffeur-driven fleet",
-    types: ["Saloons", "SUVs", "Limousines", "Vans"],
+    fleetTitle: "Our chauffeur-driven fleet",
+    fleetLead: "By the day or by the trip",
+  },
+
+  jets: {
+    eyebrow: "Jets & yachts",
+    title: "Beyond the *road*",
+    lead: "Private jets and crewed yachts: we arrange your travel, in the air as at sea.",
+    types: { jet: "Private jet", yacht: "Yacht" },
+  },
+
+  destinations: {
+    eyebrow: "Hotels & destinations",
+    title: "The world, *at your door*",
+    lead: "From Paris to Saint Barthélemy, from Courchevel to Tokyo: we book your stay at the finest addresses.",
+    hotelsTitle: "Exceptional addresses",
+    names: {
+      paris: "Paris",
+      "saint-tropez": "Saint-Tropez",
+      monaco: "Monaco",
+      cannes: "Cannes",
+      courchevel: "Courchevel",
+      gstaad: "Gstaad",
+      geneve: "Geneva",
+      londres: "London",
+      milan: "Milan",
+      rome: "Rome",
+      "porto-cervo": "Porto Cervo",
+      mykonos: "Mykonos",
+      ibiza: "Ibiza",
+      palma: "Palma de Mallorca",
+      "saint-barthelemy": "Saint Barthélemy",
+      "new-york": "New York",
+      miami: "Miami",
+      "los-angeles": "Los Angeles",
+      tulum: "Tulum",
+      mexico: "Mexico City",
+      rio: "Rio de Janeiro",
+      florianopolis: "Florianópolis",
+      "punta-del-este": "Punta del Este",
+      "le-cap": "Cape Town",
+      phuket: "Phuket",
+      singapour: "Singapore",
+      "hong-kong": "Hong Kong",
+      shanghai: "Shanghai",
+      tokyo: "Tokyo",
+    },
   },
 
   concierge: {
@@ -100,14 +179,34 @@
     },
   },
 
+  club: {
+    eyebrow: "Club Napoléon",
+    title: "Three cards, *one signature*",
+    lead: "Premium, Gold or Black: our membership cards accompany our regular clients. Ask your advisor for details.",
+    member: "Member",
+  },
+
+  testimonials: { eyebrow: "They trust us", title: "In our *partners’* words" },
+
   house: {
     eyebrow: "The House",
     title: "In the heart of the *8th arrondissement*",
     paragraphs: [
-      "Founded in 2014, Napoléon Services is based on avenue Franklin-D.-Roosevelt, a short walk from the Champs-Élysées.",
-      "Our craft: offering a discerning French and international clientele the freedom to travel and stay in Paris in the finest conditions, with the elegance and discretion they expect.",
+      "Founded in 2014 by Nassim Kara, Napoléon Services is based on avenue Franklin-D.-Roosevelt, a short walk from the Champs-Élysées.",
+      "Our craft: offering a discerning French and international clientele the freedom to travel and stay in the finest conditions, with the elegance and discretion they expect.",
     ],
-    signature: "Napoléon Services — Paris",
+    citiesLabel: "Our vehicles also await you in",
+    founderRole: "President & Founder",
+  },
+
+  cities: {
+    paris: "Paris",
+    geneve: "Geneva",
+    cannes: "Cannes",
+    monaco: "Monaco",
+    londres: "London",
+    losangeles: "Los Angeles",
+    newyork: "New York",
   },
 
   process: {
@@ -148,10 +247,7 @@
     error: "Please enter your name and at least one way to reach you (phone or email).",
     privacy: "Your details are used solely to handle your request.",
     noChannel: "Online requests will be available soon. In the meantime, please call us.",
-    mail: {
-      subject: "Booking request",
-      intro: "Hello, I would like to make a booking request.",
-    },
+    mail: { subject: "Booking request", intro: "Hello, I would like to make a booking request." },
   },
 
   contact: {
@@ -176,14 +272,7 @@
     close: "Close",
   },
 
-  legal: {
-    title: "Legal notice",
-    note: "The legal notice is provided in French, in accordance with French law.",
-  },
+  legal: { title: "Legal notice", note: "The legal notice is provided in French, in accordance with French law." },
 
-  mobile: {
-    call: "Call",
-    whatsapp: "WhatsApp",
-    book: "Book",
-  },
+  mobile: { call: "Call", whatsapp: "WhatsApp", book: "Book" },
 };

@@ -17,6 +17,7 @@
     language: "Lingua",
     todo: "da completare",
     draft: "Versione provvisoria — foto e informazioni in fase di inserimento",
+    drag: "Trascina",
   },
 
   nav: {
@@ -26,6 +27,8 @@
     house: "La Maison",
     contact: "Contatti",
     book: "Prenota",
+    jets: "Jet e yacht",
+    destinations: "Destinazioni",
   },
 
   hero: {
@@ -35,6 +38,7 @@
     ctaBook: "Prenota",
     ctaFleet: "Scopri la flotta",
     scroll: "Scorri",
+    rotator: ["Noleggio di prestigio", "Autista privato", "Hotel di lusso", "Jet e yacht"],
   },
 
   marquee: ["Con autista", "Senza autista", "Accoglienza VIP", "Jet privato", "Yacht", "Ville", "Hotel di lusso"],
@@ -50,12 +54,20 @@
     ],
   },
 
+  stats: {
+    since: "Fondazione",
+    cities: { one: "città", other: "città" },
+    vehicles: { one: "modello", other: "modelli" },
+    destinations: { one: "destinazione", other: "destinazioni" },
+    jets: { one: "jet o yacht", other: "jet e yacht" },
+  },
+
   fleet: {
     eyebrow: "La flotta",
     title: "Automobili *d’eccezione*",
-    lead: "SUV, berline e sportive dei marchi più prestigiosi, disponibili con o senza autista.",
-    filters: { all: "Tutta la flotta", suv: "SUV", sedan: "Berline", sport: "Sportive" },
-    cat: { suv: "SUV", sedan: "Berlina", sport: "Sportiva" },
+    lead: "Berline, SUV, coupé, cabriolet e compatte dei marchi più prestigiosi, con o senza autista.",
+    filters: { all: "Tutta la flotta", suv: "SUV", sedan: "Berline", coupe: "Coupé e cabriolet", compact: "Compatte" },
+    cat: { suv: "SUV", sedan: "Berlina", coupe: "Coupé / cabriolet", compact: "Compatta", van: "Van" },
     seats: { one: "{n} posto", other: "{n} posti" },
     chauffeur: "Con o senza autista",
     price: "Tariffa",
@@ -68,7 +80,31 @@
       rrsport: "Tutto il carattere sportivo di Range Rover, senza rinunciare al comfort.",
       gle: "Il grande SUV di Mercedes-Benz: spazio, comfort e tecnologia per ogni spostamento.",
       cls: "La coupé a quattro porte di Mercedes-Benz, tra eleganza e dinamismo.",
-      carrera: "La sportiva di riferimento dal 1963, per vivere Parigi al volante di una leggenda.",
+      carrera: "La sportiva di riferimento dal 1963, qui in versione cabriolet, per vivere Parigi a cielo aperto.",
+      s: "La berlina di lusso per eccellenza: silenzio, comfort sovrano e tecnologia d’avanguardia.",
+      ccoupe: "L’eleganza di una coupé Mercedes-Benz, per le vostre fughe a due.",
+      a: "Compatta e raffinata, ideale per muoversi a Parigi con discrezione.",
+    },
+    modelNames: {
+      "S-Class": "Classe S",
+      "C-Class Coupé": "Classe C Coupé",
+      "A-Class": "Classe A",
+      "E-Class": "Classe E",
+      "C-Class": "Classe C",
+      "V-Class": "Classe V",
+    },
+  },
+
+  showroom: {
+    kicker: "Showroom 3D",
+    hint: "Ruotate l’auto",
+    paint: "Colore",
+    paints: {
+      obsidian: "Nero ossidiana",
+      silver: "Argento lunare",
+      champagne: "Champagne",
+      midnight: "Blu notte",
+      pearl: "Bianco perla",
     },
   },
 
@@ -82,8 +118,53 @@
       { title: "Eventi", text: "Serate, matrimoni, sfilate, gala: un arrivo all’altezza dell’occasione." },
       { title: "Viaggi d’affari", text: "Riunioni, roadshow, delegazioni: un servizio affidabile per i vostri team e ospiti." },
     ],
-    typesLabel: "La nostra flotta con autista",
-    types: ["Berline", "SUV", "Limousine", "Van"],
+    fleetTitle: "La nostra flotta con autista",
+    fleetLead: "A giornata o a tratta",
+  },
+
+  jets: {
+    eyebrow: "Jet e yacht",
+    title: "Oltre la *strada*",
+    lead: "Jet privati e yacht con equipaggio: organizziamo i vostri viaggi, in cielo come in mare.",
+    types: { jet: "Jet privato", yacht: "Yacht" },
+  },
+
+  destinations: {
+    eyebrow: "Hotel e destinazioni",
+    title: "Il mondo, *alla vostra porta*",
+    lead: "Da Parigi a Saint-Barthélemy, da Courchevel a Tokyo: prenotiamo il vostro soggiorno negli indirizzi più esclusivi.",
+    hotelsTitle: "Indirizzi d’eccezione",
+    names: {
+      paris: "Parigi",
+      "saint-tropez": "Saint-Tropez",
+      monaco: "Monaco",
+      cannes: "Cannes",
+      courchevel: "Courchevel",
+      gstaad: "Gstaad",
+      geneve: "Ginevra",
+      londres: "Londra",
+      milan: "Milano",
+      rome: "Roma",
+      "porto-cervo": "Porto Cervo",
+      mykonos: "Mykonos",
+      ibiza: "Ibiza",
+      palma: "Palma di Maiorca",
+      "saint-barthelemy": "Saint-Barthélemy",
+      "new-york": "New York",
+      miami: "Miami",
+      "los-angeles": "Los Angeles",
+      tulum: "Tulum",
+      mexico: "Città del Messico",
+      rio: "Rio de Janeiro",
+      florianopolis: "Florianópolis",
+      "punta-del-este": "Punta del Este",
+      "le-cap": "Città del Capo",
+      phuket: "Phuket",
+      singapour: "Singapore",
+      "hong-kong": "Hong Kong",
+      shanghai: "Shanghai",
+      tokyo: "Tokyo",
+    },
   },
 
   concierge: {
@@ -92,22 +173,48 @@
     lead: "Oltre all’automobile, il nostro servizio di concierge si occupa di ogni dettaglio della vostra visita.",
     items: {
       hotel: { title: "Hotel di lusso", text: "Prenotazioni nelle strutture più esclusive di Parigi e del mondo." },
-      apartment: { title: "Appartamenti", text: "Appartamenti e residenze di pregio, per qualche notte o diversi mesi." },
-      vip: { title: "Accoglienza VIP", text: "Accoglienza personalizzata in aeroporto e accompagnamento fino al vostro veicolo." },
+      apartment: {
+        title: "Appartamenti",
+        text: "Appartamenti e residenze di pregio, per qualche notte o diversi mesi.",
+      },
+      vip: {
+        title: "Accoglienza VIP",
+        text: "Accoglienza personalizzata in aeroporto e accompagnamento fino al vostro veicolo.",
+      },
       jet: { title: "Jet privato", text: "Noleggio di jet privati verso la destinazione che preferite." },
       yacht: { title: "Yacht", text: "Noleggio di yacht con equipaggio per le vostre fughe in mare." },
       villa: { title: "Ville", text: "Ville d’eccezione per vacanze, eventi o soggiorni in famiglia." },
     },
   },
 
+  club: {
+    eyebrow: "Club Napoléon",
+    title: "Tre carte, *una firma*",
+    lead: "Premium, Gold o Black: le nostre carte membro accompagnano i clienti abituali. Chiedete informazioni al vostro consulente.",
+    member: "Membro",
+  },
+
+  testimonials: { eyebrow: "Si fidano di noi", title: "La parola ai nostri *partner*" },
+
   house: {
     eyebrow: "La Maison",
     title: "Nel cuore dell’*8° arrondissement*",
     paragraphs: [
-      "Fondata nel 2014, Napoléon Services ha sede in avenue Franklin-D.-Roosevelt, a pochi passi dagli Champs-Élysées.",
-      "Il nostro mestiere: offrire a una clientela esigente, francese e internazionale, la libertà di spostarsi e soggiornare a Parigi nelle migliori condizioni, con l’eleganza e la discrezione che si aspetta.",
+      "Fondata nel 2014 da Nassim Kara, Napoléon Services ha sede in avenue Franklin-D.-Roosevelt, a pochi passi dagli Champs-Élysées.",
+      "Il nostro mestiere: offrire a una clientela esigente, francese e internazionale, la libertà di spostarsi e soggiornare nelle migliori condizioni, con l’eleganza e la discrezione che si aspetta.",
     ],
-    signature: "Napoléon Services — Parigi",
+    citiesLabel: "I nostri veicoli vi attendono anche a",
+    founderRole: "Presidente e fondatore",
+  },
+
+  cities: {
+    paris: "Parigi",
+    geneve: "Ginevra",
+    cannes: "Cannes",
+    monaco: "Monaco",
+    londres: "Londra",
+    losangeles: "Los Angeles",
+    newyork: "New York",
   },
 
   process: {
@@ -181,9 +288,5 @@
     note: "Le note legali sono fornite in francese, in conformità con la legge francese.",
   },
 
-  mobile: {
-    call: "Chiama",
-    whatsapp: "WhatsApp",
-    book: "Prenota",
-  },
+  mobile: { call: "Chiama", whatsapp: "WhatsApp", book: "Prenota" },
 };

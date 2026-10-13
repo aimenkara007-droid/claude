@@ -18,6 +18,7 @@
     language: "语言",
     todo: "待补充",
     draft: "预览版本——照片与信息正在完善中",
+    drag: "拖动",
   },
 
   nav: {
@@ -27,6 +28,8 @@
     house: "关于我们",
     contact: "联系我们",
     book: "立即预订",
+    jets: "私人飞机与游艇",
+    destinations: "目的地",
   },
 
   hero: {
@@ -36,6 +39,7 @@
     ctaBook: "立即预订",
     ctaFleet: "探索车队",
     scroll: "向下滚动",
+    rotator: ["尊享租车", "私人司机", "奢华酒店", "私人飞机与游艇"],
   },
 
   marquee: ["专职司机", "自驾租赁", "VIP 接待", "私人飞机", "游艇", "别墅", "奢华酒店"],
@@ -51,12 +55,20 @@
     ],
   },
 
+  stats: {
+    since: "创立",
+    cities: { other: "座城市" },
+    vehicles: { other: "款车型" },
+    destinations: { other: "个目的地" },
+    jets: { other: "架飞机与艘游艇" },
+  },
+
   fleet: {
     eyebrow: "车队",
     title: "*非凡*座驾",
-    lead: "顶级品牌的 SUV、轿车与跑车，可自驾，亦可配专职司机。",
-    filters: { all: "全部车型", suv: "SUV", sedan: "轿车", sport: "跑车" },
-    cat: { suv: "SUV", sedan: "轿车", sport: "跑车" },
+    lead: "顶级品牌的轿车、SUV、轿跑、敞篷车与紧凑型车，可自驾，亦可配专职司机。",
+    filters: { all: "全部车型", suv: "SUV", sedan: "轿车", coupe: "轿跑与敞篷", compact: "紧凑型" },
+    cat: { suv: "SUV", sedan: "轿车", coupe: "轿跑 / 敞篷", compact: "紧凑型", van: "商务车" },
     seats: { other: "{n} 座" },
     chauffeur: "自驾或配司机",
     price: "价格",
@@ -69,8 +81,18 @@
       rrsport: "揽胜家族的运动基因，舒适丝毫不减。",
       gle: "梅赛德斯-奔驰大型 SUV：宽敞、舒适、科技兼备，适合各类出行。",
       cls: "梅赛德斯-奔驰四门轿跑，优雅与动感兼具。",
-      carrera: "自1963年以来的跑车标杆，驾驭传奇，畅游巴黎。",
+      carrera: "自1963年以来的跑车标杆，敞篷版本，畅享巴黎的开阔天空。",
+      s: "豪华轿车的标杆：静谧、尊贵舒适，科技领先。",
+      ccoupe: "梅赛德斯-奔驰轿跑的优雅，适合二人出行。",
+      a: "紧凑而精致，低调穿梭于巴黎街头。",
     },
+  },
+
+  showroom: {
+    kicker: "3D 展厅",
+    hint: "拖动旋转车辆",
+    paint: "车身颜色",
+    paints: { obsidian: "曜石黑", silver: "月光银", champagne: "香槟金", midnight: "午夜蓝", pearl: "珍珠白" },
   },
 
   chauffeur: {
@@ -83,8 +105,53 @@
       { title: "活动出行", text: "晚宴、婚礼、时装秀、慈善晚会：以与场合相称的方式隆重登场。" },
       { title: "商务出行", text: "会议、路演、代表团接待：为您的团队与宾客提供可靠服务。" },
     ],
-    typesLabel: "司机服务车型",
-    types: ["轿车", "SUV", "豪华礼宾车", "商务车"],
+    fleetTitle: "专职司机车队",
+    fleetLead: "按天或按单程预订",
+  },
+
+  jets: {
+    eyebrow: "私人飞机与游艇",
+    title: "超越*道路*",
+    lead: "私人飞机与配备船员的游艇：无论空中还是海上，我们都为您妥善安排行程。",
+    types: { jet: "私人飞机", yacht: "游艇" },
+  },
+
+  destinations: {
+    eyebrow: "酒店与目的地",
+    title: "世界，*近在咫尺*",
+    lead: "从巴黎到圣巴泰勒米，从高雪维尔到东京：我们为您预订最出色的下榻之所。",
+    hotelsTitle: "臻选酒店",
+    names: {
+      paris: "巴黎",
+      "saint-tropez": "圣特罗佩",
+      monaco: "摩纳哥",
+      cannes: "戛纳",
+      courchevel: "高雪维尔",
+      gstaad: "格施塔德",
+      geneve: "日内瓦",
+      londres: "伦敦",
+      milan: "米兰",
+      rome: "罗马",
+      "porto-cervo": "切尔沃港",
+      mykonos: "米科诺斯",
+      ibiza: "伊维萨",
+      palma: "帕尔马",
+      "saint-barthelemy": "圣巴泰勒米",
+      "new-york": "纽约",
+      miami: "迈阿密",
+      "los-angeles": "洛杉矶",
+      tulum: "图卢姆",
+      mexico: "墨西哥城",
+      rio: "里约热内卢",
+      florianopolis: "弗洛里亚诺波利斯",
+      "punta-del-este": "埃斯特角城",
+      "le-cap": "开普敦",
+      phuket: "普吉岛",
+      singapour: "新加坡",
+      "hong-kong": "香港",
+      shanghai: "上海",
+      tokyo: "东京",
+    },
   },
 
   concierge: {
@@ -101,14 +168,34 @@
     },
   },
 
+  club: {
+    eyebrow: "Napoléon 会员俱乐部",
+    title: "三张会员卡，*一种格调*",
+    lead: "Premium、Gold 或 Black：为常客提供的会员卡。详情请咨询您的专属顾问。",
+    member: "会员",
+  },
+
+  testimonials: { eyebrow: "合作伙伴的信赖", title: "来自*合作伙伴*的评价" },
+
   house: {
     eyebrow: "关于我们",
     title: "坐落于巴黎*第八区*核心",
     paragraphs: [
-      "Napoléon Services 成立于2014年，位于罗斯福大道（avenue Franklin-D.-Roosevelt），距香榭丽舍大街仅数步之遥。",
-      "我们的使命：为来自法国及世界各地的尊贵客户提供在巴黎出行与旅居的自由与最佳体验，兼具他们所期待的优雅与私密。",
+      "Napoléon Services 由 Nassim Kara 于2014年创立，位于罗斯福大道（avenue Franklin-D.-Roosevelt），距香榭丽舍大街仅数步之遥。",
+      "我们的使命：为来自法国及世界各地的尊贵客户提供出行与旅居的自由与最佳体验，兼具他们所期待的优雅与私密。",
     ],
-    signature: "Napoléon Services — 巴黎",
+    citiesLabel: "我们的车辆同样服务于",
+    founderRole: "总裁兼创始人",
+  },
+
+  cities: {
+    paris: "巴黎",
+    geneve: "日内瓦",
+    cannes: "戛纳",
+    monaco: "摩纳哥",
+    londres: "伦敦",
+    losangeles: "洛杉矶",
+    newyork: "纽约",
   },
 
   process: {
@@ -136,12 +223,7 @@
       message: "留言",
       messagePlaceholder: "上车地点、乘客人数、特殊需求……",
     },
-    services: {
-      rent: "自驾租车",
-      chauffeur: "配司机租车",
-      concierge: "礼宾服务",
-      other: "其他需求",
-    },
+    services: { rent: "自驾租车", chauffeur: "配司机租车", concierge: "礼宾服务", other: "其他需求" },
     vehicleAny: "无偏好",
     sendWhatsapp: "通过 WhatsApp 发送",
     sendEmail: "通过电子邮件发送",
@@ -149,10 +231,7 @@
     error: "请填写您的姓名，以及至少一种联系方式（电话或电子邮箱）。",
     privacy: "您的信息仅用于处理本次需求。",
     noChannel: "在线提交功能即将开通，目前请致电联系我们。",
-    mail: {
-      subject: "预订申请",
-      intro: "您好，我想提交一份预订申请。",
-    },
+    mail: { subject: "预订申请", intro: "您好，我想提交一份预订申请。" },
   },
 
   contact: {
@@ -170,21 +249,9 @@
     today: "今天",
   },
 
-  footer: {
-    tagline: "巴黎豪华汽车租赁 · 自驾或配司机 · 礼宾服务",
-    legal: "法律声明",
-    rights: "版权所有。",
-    close: "关闭",
-  },
+  footer: { tagline: "巴黎豪华汽车租赁 · 自驾或配司机 · 礼宾服务", legal: "法律声明", rights: "版权所有。", close: "关闭" },
 
-  legal: {
-    title: "法律声明",
-    note: "根据法国法律，法律声明以法语提供。",
-  },
+  legal: { title: "法律声明", note: "根据法国法律，法律声明以法语提供。" },
 
-  mobile: {
-    call: "致电",
-    whatsapp: "WhatsApp",
-    book: "预订",
-  },
+  mobile: { call: "致电", whatsapp: "WhatsApp", book: "预订" },
 };

@@ -2,7 +2,8 @@
 (function () {
   "use strict";
 
-  document.documentElement.classList.add("js");
+  var root = document.documentElement;
+  root.classList.add("js");
 
   var S = window.NS;
   var I18N = window.NS_I18N || {};
@@ -13,6 +14,7 @@
   var LANGS = (S.langues || Object.keys(I18N)).filter(function (l) { return I18N[l]; });
   var DEFAULT = I18N[S.langueParDefaut] ? S.langueParDefaut : LANGS[0];
   var REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var FINE = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   var BASE_URL = S.siteWeb || "";
 
   var lang = DEFAULT;
@@ -30,7 +32,7 @@
     });
   }
   function $(sel) { return document.querySelector(sel); }
-  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function $all(sel, rootEl) { return Array.prototype.slice.call((rootEl || document).querySelectorAll(sel)); }
   function setHTML(sel, html) { var el = $(sel); if (el) el.innerHTML = html; return el; }
   function get(obj, path) {
     return path.split(".").reduce(function (o, k) { return o == null ? o : o[k]; }, obj);
@@ -53,18 +55,29 @@
   // Numéros, adresses, e-mails : toujours de gauche à droite, même dans une page en arabe.
   function ltr(html) { return '<span dir="ltr">' + html + "</span>"; }
   // Même chose pour du texte brut (listes déroulantes, message WhatsApp) : « 911 Carrera » reste dans l'ordre.
-  function isolate(text) { return "\u2066" + text + "\u2069"; }
+  function isolate(text) { return "⁦" + text + "⁩"; }
   function plural(forms, n) {
+    if (typeof forms === "string") return forms.replace("{n}", n);
     var rule = "other";
     try { rule = new Intl.PluralRules(intl()).select(n); } catch (e) { /* navigateur ancien */ }
     return (forms[rule] || forms.other).replace("{n}", n);
   }
-  function storage(key, value) {
+  function fmtNumber(n) {
+    try { return new Intl.NumberFormat(intl()).format(n); } catch (e) { return String(n); }
+  }
+  function storage(key, value, session) {
     try {
-      if (value === undefined) return window.localStorage.getItem(key);
-      window.localStorage.setItem(key, value);
+      var store = session ? window.sessionStorage : window.localStorage;
+      if (value === undefined) return store.getItem(key);
+      store.setItem(key, value);
     } catch (e) { /* stockage indisponible : on s'en passe */ }
     return null;
+  }
+  function emit(name, detail) { document.dispatchEvent(new CustomEvent(name, { detail: detail })); }
+  // Nom de modèle, éventuellement traduit (« S-Class » → « Classe S »).
+  function modelName(m) {
+    var map = t("fleet.modelNames") || {};
+    return String(m).split(" · ").map(function (part) { return map[part] || part; }).join(" · ");
   }
 
   // ---------- Langue ----------
@@ -97,8 +110,8 @@
     if (!I18N[code]) code = DEFAULT;
     lang = code;
     L = I18N[code];
-    document.documentElement.lang = L.htmlLang || code;
-    document.documentElement.dir = L.dir || "ltr";
+    root.lang = L.htmlLang || code;
+    root.dir = L.dir || "ltr";
     loadFonts(L.fonts);
     if (opts.remember) storage("ns-lang", code);
     if (opts.updateUrl) {
@@ -154,7 +167,7 @@
     }, { rootMargin: "0px 0px -8% 0px" })
     : null;
   function observe(el) {
-    if (el.classList.contains("is-visible")) return;
+    if (el.classList.contains("is-visible") || el.closest(".hero")) return;
     // Après un changement de langue, rien ne doit se cacher à nouveau.
     if (io && firstRender) io.observe(el); else el.classList.add("is-visible");
   }
@@ -165,13 +178,16 @@
     if (!el || !src || photoState[src] === "fail") { if (onFail) onFail(); return; }
     if (el.querySelector("img")) return;
     var img = document.createElement("img");
-    img.alt = "";
+    img.alt = el.getAttribute("data-alt") || "";
     img.decoding = "async";
     img.loading = el.hasAttribute("data-eager") ? "eager" : "lazy";
     img.onload = function () { photoState[src] = "ok"; el.classList.add("has-photo"); };
     img.onerror = function () { photoState[src] = "fail"; img.remove(); if (onFail) onFail(); };
     el.appendChild(img);
     img.src = src;
+  }
+  function photoSlots(scope) {
+    $all("[data-src]", scope).forEach(function (el) { addPhoto(el, el.getAttribute("data-src")); });
   }
 
   // ---------- Données dérivées ----------
@@ -182,8 +198,18 @@
   var mapsQuery = encodeURIComponent(S.nomOfficiel + ", " + adresseLigne);
   var itineraire = "https://www.google.com/maps/dir/?api=1&destination=" + mapsQuery;
   var cars = S.flotte || [];
-  var CAT_ORDER = ["suv", "sedan", "sport"];
+  var chauffeurs = S.chauffeurs || [];
+  var CAT_ORDER = ["suv", "sedan", "coupe", "compact"];
+  var STYLE_TO_CAT = { suv: "suv", sedan: "sedan", sport: "coupe", compact: "compact" };
   var fleetFilter = "all";
+  var showroomStyle = "sedan";
+  var paint = (S.peintures && S.peintures[0] && S.peintures[0].id) || "obsidian";
+  // Nombre de modèles différents (location + chauffeur, sans doublon de photo).
+  var vehicleCount = (function () {
+    var seen = {};
+    cars.concat(chauffeurs).forEach(function (c) { seen[c.photo] = true; });
+    return Object.keys(seen).length;
+  })();
 
   // ---------- Icônes ----------
   var ICONS = {
@@ -258,6 +284,20 @@
   function renderHero() {
     setHTML("#hero-address", ltr(esc(adresseLigne)));
     setHTML("#hero-phone", phone ? link("tel:" + phone.lien, ltr(esc(phone.affiche))) : "");
+    rotatorIndex = 0;
+    showRotator(true);
+  }
+
+  // Mots qui se succèdent sous le titre (location, chauffeur, hôtels, jets…).
+  var rotatorIndex = 0;
+  function showRotator(instant) {
+    var words = t("hero.rotator") || [];
+    var el = $("#hero-rotator");
+    if (!el || !words.length) return;
+    var word = words[rotatorIndex % words.length];
+    if (instant || REDUCE) { el.textContent = word; el.className = "is-in"; return; }
+    el.className = "is-out";
+    setTimeout(function () { el.textContent = word; el.className = "is-in"; }, 420);
   }
 
   // Bande défilante : marques et services en alternance, deux copies pour une boucle sans couture.
@@ -282,6 +322,52 @@
     }).join(""));
   }
 
+  // Chiffres clés, tirés des données (aucun chiffre inventé).
+  function renderStats() {
+    var items = [
+      { n: S.fondation, label: t("stats.since"), year: true },
+      { n: (S.villes || []).length, label: plural(t("stats.cities"), (S.villes || []).length) },
+      { n: vehicleCount, label: plural(t("stats.vehicles"), vehicleCount) },
+      { n: (S.destinations || []).length, label: plural(t("stats.destinations"), (S.destinations || []).length) },
+      { n: (S.jets || []).length, label: plural(t("stats.jets"), (S.jets || []).length) },
+    ];
+    setHTML("#stats", items.map(function (it, i) {
+      var shown = statsDone || it.year || REDUCE ? (it.year ? String(it.n) : fmtNumber(it.n)) : "0";
+      return '<li class="stat reveal" style="--i:' + i + '"><span class="stat-num" data-to="' + it.n + '"' + (it.year ? ' data-year=""' : "") + ">" +
+        esc(shown) + '</span><span class="stat-label">' + esc(it.label.replace("{n}", "").trim()) + "</span></li>";
+    }).join(""));
+  }
+  var statsDone = false;
+  function countUp() {
+    if (statsDone) return;
+    statsDone = true;
+    $all("#stats .stat-num").forEach(function (el) {
+      if (el.hasAttribute("data-year")) return;
+      var to = +el.getAttribute("data-to"), t0 = performance.now(), dur = 1600;
+      (function step(now) {
+        var k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = fmtNumber(Math.round(to * e));
+        if (k < 1) requestAnimationFrame(step);
+      })(t0);
+    });
+  }
+
+  function styleModels(styleKey) {
+    var cat = STYLE_TO_CAT[styleKey];
+    return cars.filter(function (c) { return c.categorie === cat; }).map(function (c) { return modelName(c.modele); });
+  }
+  function renderShowroomLabel() {
+    var cat = STYLE_TO_CAT[showroomStyle];
+    setHTML("#showroom-style", esc(t("fleet.filters." + cat)));
+    setHTML("#showroom-models", styleModels(showroomStyle).map(function (m) { return ltr(esc(m)); }).join('<span class="dot">·</span>'));
+  }
+  function renderPaints() {
+    setHTML("#paints", (S.peintures || []).map(function (p) {
+      return '<button type="button" class="paint" data-paint="' + esc(p.id) + '" style="--paint:' + esc(p.hex) + '" aria-pressed="' + (p.id === paint) + '"' +
+        ' aria-label="' + esc(t("showroom.paints." + p.id)) + '" title="' + esc(t("showroom.paints." + p.id)) + '"></button>';
+    }).join(""));
+  }
+
   function renderFleet() {
     var cats = CAT_ORDER.filter(function (c) { return cars.some(function (car) { return car.categorie === c; }); });
     setHTML("#fleet-filters", ["all"].concat(cats).map(function (c) {
@@ -295,13 +381,14 @@
       if (typeof car.places === "number") specs.push("<li>" + icon("seat", "icon icon-sm") + esc(plural(t("fleet.seats"), car.places)) + "</li>");
       else if (DRAFT) specs.push("<li>" + icon("seat", "icon icon-sm") + todo() + "</li>");
       specs.push("<li>" + esc(t("fleet.chauffeur")) + "</li>");
-      return '<article class="car reveal" data-cat="' + esc(car.categorie) + '" style="--i:' + (i % 3) + '">' +
-        '<div class="car-media photo-slot" data-src="' + esc(car.photo || "") + '">' +
+      var name = modelName(car.modele);
+      return '<article class="car reveal" data-cat="' + esc(car.categorie) + '" data-tilt style="--i:' + (i % 3) + '">' +
+        '<div class="car-media photo-slot" data-src="' + esc(car.photo || "") + '" data-alt="' + esc(car.marque + " " + name) + '">' +
           '<span class="car-ghost" aria-hidden="true">' + esc(car.embleme || car.modele) + "</span>" +
         "</div>" +
         '<div class="car-body">' +
           '<p class="car-brand">' + ltr(esc(car.marque)) + "</p>" +
-          '<h3 class="car-model">' + ltr(esc(car.modele)) + "</h3>" +
+          '<h3 class="car-model">' + ltr(esc(name)) + "</h3>" +
           '<p class="car-desc">' + esc(t("fleet.cars." + car.id)) + "</p>" +
           '<ul class="car-specs">' + specs.join("") + "</ul>" +
           '<div class="car-foot">' +
@@ -311,8 +398,10 @@
         "</div>" +
       "</article>";
     }).join(""));
-    $all("#fleet .car-media").forEach(function (el) { addPhoto(el, el.getAttribute("data-src")); });
+    photoSlots($("#fleet"));
     applyFleetFilter();
+    renderShowroomLabel();
+    renderPaints();
   }
   function applyFleetFilter() {
     $all("#fleet .car").forEach(function (card) {
@@ -328,22 +417,94 @@
       return '<li class="reveal" style="--i:' + (i % 2) + '"><span class="service-num">0' + (i + 1) + "</span>" +
         "<h3>" + esc(s.title) + "</h3><p>" + esc(s.text) + "</p></li>";
     }).join(""));
-    setHTML("#chauffeur-types", (t("chauffeur.types") || []).map(function (x) {
-      return "<li>" + esc(x) + "</li>";
+    setHTML("#chauffeur-fleet", chauffeurs.map(function (c, i) {
+      var name = modelName(c.modele);
+      return '<li class="cf-car reveal" data-tilt style="--i:' + i + '">' +
+        '<div class="cf-media photo-slot" data-src="' + esc(c.photo) + '" data-alt="' + esc(c.marque + " " + name) + '"></div>' +
+        '<div class="cf-body"><span class="cf-type">' + esc(t("fleet.cat." + c.type)) + "</span>" +
+        '<h4 class="cf-name">' + ltr(esc(name)) + "</h4>" +
+        '<span class="cf-brand">' + ltr(esc(c.marque)) + "</span></div></li>";
     }).join(""));
+    photoSlots($("#chauffeur-fleet"));
+  }
+
+  // Destinations : deux rangées qui défilent en sens contraire (deux copies chacune).
+  function renderDestinations() {
+    var ids = S.destinations || [], names = t("destinations.names") || {};
+    var half = Math.ceil(ids.length / 2);
+    var rows = [ids.slice(0, half), ids.slice(half)];
+    setHTML("#dest-rows", rows.map(function (row, r) {
+      var tiles = row.map(function (id) {
+        var name = names[id] || id;
+        return '<figure class="dest"><div class="dest-media photo-slot" data-src="images/destinations/' + esc(id) + '.jpg" data-alt="' + esc(name) + '"></div>' +
+          "<figcaption>" + esc(name) + "</figcaption></figure>";
+      }).join("");
+      return '<div class="dest-row' + (r ? " is-reverse" : "") + '"><div class="dest-track">' +
+        '<div class="dest-group">' + tiles + '</div><div class="dest-group" aria-hidden="true">' + tiles + "</div></div></div>";
+    }).join(""));
+    photoSlots($("#dest-rows"));
+    setHTML("#hotels", (S.hotels || []).map(function (h, i) {
+      return '<li class="hotel reveal" data-tilt style="--i:' + i + '"><div class="hotel-media photo-slot" data-src="' + esc(h.photo) + '" data-alt="' + esc(h.nom) + '"></div>' +
+        '<p class="hotel-name">' + ltr(esc(h.nom)) + "</p></li>";
+    }).join(""));
+    photoSlots($("#hotels"));
+  }
+
+  // Jets et yachts : cartes d'une galerie horizontale.
+  function renderJets() {
+    var list = S.jets || [];
+    setHTML("#hscroll-track", list.map(function (j, i) {
+      var media = j.photo
+        ? '<div class="hs-media photo-slot" data-src="' + esc(j.photo) + '" data-alt="' + esc(j.nom) + '"></div>'
+        : '<div class="hs-media hs-ghost"><span>' + esc(j.nom) + "</span></div>";
+      return '<article class="hs-card">' + media +
+        '<div class="hs-caption"><span class="hs-index">' + ("0" + (i + 1)).slice(-2) + " / " + ("0" + list.length).slice(-2) + "</span>" +
+        '<span class="hs-type">' + esc(t("jets.types." + j.type)) + "</span>" +
+        '<h3 class="hs-name">' + ltr(esc(j.nom)) + "</h3></div></article>";
+    }).join(""));
+    photoSlots($("#hscroll-track"));
+    layoutHScroll();
   }
 
   var CONCIERGE_ORDER = ["hotel", "apartment", "vip", "jet", "yacht", "villa"];
   function renderConcierge() {
     var items = t("concierge.items") || {};
     setHTML("#concierge", CONCIERGE_ORDER.filter(function (k) { return items[k]; }).map(function (k, i) {
-      return '<li class="concierge-item reveal" style="--i:' + (i % 3) + '">' + icon(k, "icon icon-lg") +
+      return '<li class="concierge-item reveal" data-tilt style="--i:' + (i % 3) + '">' + icon(k, "icon icon-lg") +
         "<h3>" + esc(items[k].title) + "</h3><p>" + esc(items[k].text) + "</p></li>";
+    }).join(""));
+  }
+
+  // Cartes de membre : Premium, Gold, Black.
+  function renderClub() {
+    setHTML("#club-cards", (S.cartes || []).map(function (tier, i) {
+      return '<div class="mcard mcard-' + esc(tier.toLowerCase()) + '" data-tilt style="--i:' + i + '">' +
+        '<div class="mcard-inner">' +
+          '<svg class="mcard-emblem" aria-hidden="true"><use href="#emblem"/></svg>' +
+          '<span class="mcard-chip" aria-hidden="true"></span>' +
+          '<span class="mcard-brand">Napoléon</span>' +
+          '<span class="mcard-tier">' + esc(tier) + "</span>" +
+          '<span class="mcard-member">' + esc(t("club.member")) + "</span>" +
+          '<span class="mcard-sheen" aria-hidden="true"></span>' +
+        "</div></div>";
+    }).join(""));
+  }
+
+  // Témoignages, cités dans leur langue d'origine.
+  function renderQuotes() {
+    setHTML("#quotes", (S.temoignages || []).map(function (q, i) {
+      return '<figure class="quote reveal" style="--i:' + i + '"><span class="quote-mark" aria-hidden="true">“</span>' +
+        '<blockquote lang="en" dir="ltr"><p>' + esc(q.texte) + "</p></blockquote>" +
+        '<figcaption><span class="quote-author">' + esc(q.auteur) + '</span><span class="quote-role" lang="en" dir="ltr">' +
+        esc(q.role) + " — " + esc(q.societe) + "</span></figcaption></figure>";
     }).join(""));
   }
 
   function renderHouse() {
     setHTML("#house-text", (t("house.paragraphs") || []).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join(""));
+    var names = t("cities") || {};
+    setHTML("#cities", (S.villes || []).map(function (id) { return "<li>" + esc(names[id] || id) + "</li>"; }).join(""));
+    setHTML("#founder-name", esc((S.fondateur && S.fondateur.nom) || ""));
   }
 
   function renderSteps() {
@@ -363,15 +524,19 @@
     service.innerHTML = SERVICES.map(function (k) {
       return '<option value="' + k + '">' + esc(t("booking.services." + k)) + "</option>";
     }).join("");
-    vehicle.innerHTML = '<option value="">' + esc(t("booking.vehicleAny")) + "</option>" + cars.map(function (c) {
-      return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + c.modele)) + "</option>";
-    }).join("");
+    vehicle.innerHTML = '<option value="">' + esc(t("booking.vehicleAny")) + "</option>" +
+      '<optgroup label="' + esc(t("booking.services.rent")) + '">' + cars.map(function (c) {
+        return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + modelName(c.modele))) + "</option>";
+      }).join("") + "</optgroup>" +
+      '<optgroup label="' + esc(t("booking.services.chauffeur")) + '">' + chauffeurs.map(function (c) {
+        return '<option value="' + esc(c.id) + '">' + esc(isolate(c.marque + " " + modelName(c.modele))) + "</option>";
+      }).join("") + "</optgroup>";
     service.value = sv;
     vehicle.value = vv;
 
     var actions = [];
-    if (hasWhatsapp) actions.push('<button class="btn btn-gold" type="submit" data-channel="whatsapp">' + icon("whatsapp", "icon icon-sm") + esc(t("booking.sendWhatsapp")) + "</button>");
-    if (hasEmail) actions.push('<button class="btn ' + (actions.length ? "btn-ghost" : "btn-gold") + '" type="submit" data-channel="email">' + esc(t("booking.sendEmail")) + "</button>");
+    if (hasWhatsapp) actions.push('<button class="btn btn-gold magnetic" type="submit" data-channel="whatsapp">' + icon("whatsapp", "icon icon-sm") + esc(t("booking.sendWhatsapp")) + "</button>");
+    if (hasEmail) actions.push('<button class="btn magnetic ' + (actions.length ? "btn-ghost" : "btn-gold") + '" type="submit" data-channel="email">' + esc(t("booking.sendEmail")) + "</button>");
     if (!actions.length) actions.push(DRAFT
       ? '<p class="form-pending">WhatsApp / e-mail : ' + todo() + "</p>"
       : '<p class="form-pending">' + esc(t("booking.noChannel")) + "</p>");
@@ -393,7 +558,7 @@
   }
   function bookingMessage() {
     var f = function (id) { return ($("#" + id).value || "").trim(); };
-    var car = cars.filter(function (c) { return c.id === f("f-vehicle"); })[0];
+    var car = cars.concat(chauffeurs).filter(function (c) { return c.id === f("f-vehicle"); })[0];
     var lines = [t("booking.mail.intro"), ""];
     var sep = lang === "fr" ? " : " : /^zh/.test(L.htmlLang) ? "：" : ": ";
     function add(label, value) { if (value) lines.push(label + sep + value); }
@@ -401,7 +566,7 @@
     add(t("booking.fields.phone"), f("f-phone"));
     add(t("booking.fields.email"), f("f-email"));
     add(t("booking.fields.service"), t("booking.services." + f("f-service")));
-    add(t("booking.fields.vehicle"), car ? isolate(car.marque + " " + car.modele) : t("booking.vehicleAny"));
+    add(t("booking.fields.vehicle"), car ? isolate(car.marque + " " + modelName(car.modele)) : t("booking.vehicleAny"));
     add(t("booking.fields.from"), fmtDate(f("f-from")));
     add(t("booking.fields.to"), fmtDate(f("f-to")));
     if (f("f-message")) lines.push("", f("f-message"));
@@ -502,8 +667,8 @@
 
   function renderFooter() {
     setHTML("#footer-nav", [
-      ["#flotte", "nav.fleet"], ["#chauffeur", "nav.chauffeur"], ["#conciergerie", "nav.concierge"],
-      ["#maison", "nav.house"], ["#reservation", "nav.book"], ["#contact", "nav.contact"],
+      ["#flotte", "nav.fleet"], ["#chauffeur", "nav.chauffeur"], ["#jets", "nav.jets"], ["#destinations", "nav.destinations"],
+      ["#conciergerie", "nav.concierge"], ["#maison", "nav.house"], ["#reservation", "nav.book"], ["#contact", "nav.contact"],
     ].map(function (x) { return link(x[0], esc(t(x[1]))); }).join(""));
     $("#year").textContent = new Date().getFullYear();
     setHTML("#socials", ["instagram", "facebook"].filter(function (k) { return R[k]; }).map(function (k) {
@@ -534,7 +699,7 @@
       ["Données personnelles", "Le formulaire de réservation ne stocke aucune donnée sur ce site : votre message est transmis directement à " +
         esc(S.nomOfficiel) + " par WhatsApp ou par e-mail, et utilisé uniquement pour traiter votre demande. " +
         "Conformément au RGPD, vous pouvez demander l’accès, la rectification ou la suppression de vos données à l’adresse " + mail + ". " +
-        "Ce site affiche une carte Google Maps et utilise des polices Google Fonts, chargées depuis les serveurs de Google."],
+        "Ce site affiche une carte Google Maps, utilise des polices Google Fonts et charge la bibliothèque 3D Three.js depuis le réseau jsDelivr."],
     ];
     setHTML("#legal-body", '<dl lang="fr" dir="ltr">' + rows.map(function (r) {
       return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>";
@@ -556,13 +721,13 @@
       description: t("meta.description"),
       inLanguage: L.htmlLang,
       address: { "@type": "PostalAddress", streetAddress: C.adresse, postalCode: C.codePostal, addressLocality: C.ville, addressCountry: C.pays },
-      areaServed: "Paris",
-      foundingDate: "2014",
+      areaServed: (S.villes || []).map(function (id) { return (I18N.en && I18N.en.cities && I18N.en.cities[id]) || id; }),
+      foundingDate: String(S.fondation || ""),
     };
-    if (BASE_URL) ld.url = BASE_URL;
+    if (S.fondateur && S.fondateur.nom) ld.founder = { "@type": "Person", name: S.fondateur.nom };
+    if (BASE_URL) { ld.url = BASE_URL; ld.image = BASE_URL + "images/flotte/classe-s.jpg"; }
     if (phone) ld.telephone = phone.lien;
     if (hasEmail) ld.email = C.email;
-    if (P.accueil && photoState[P.accueil] === "ok" && BASE_URL) ld.image = BASE_URL + P.accueil;
     if (Array.isArray(S.horaires)) {
       var spec = [];
       S.horaires.forEach(function (h, i) {
@@ -589,9 +754,14 @@
     renderHero();
     renderMarquee();
     renderPillars();
+    renderStats();
     renderFleet();
     renderChauffeur();
+    renderJets();
+    renderDestinations();
     renderConcierge();
+    renderClub();
+    renderQuotes();
     renderHouse();
     renderSteps();
     renderBooking();
@@ -601,6 +771,7 @@
     renderLegal();
     renderLD();
     $all(".reveal, .reveal-img, .split, .eyebrow").forEach(observe);
+    if (root.classList.contains("intro-done")) $all(".hero .split, .hero .eyebrow").forEach(function (el) { el.classList.add("is-visible"); });
     firstRender = false;
   }
 
@@ -620,12 +791,8 @@
     probe.src = P.logo;
   }
 
-  // Grandes photos : l'Arc de Triomphe s'efface quand la photo d'accueil existe.
-  $all("[data-photo]").forEach(function (el) {
-    var key = el.getAttribute("data-photo");
-    if (key === "accueil") el.setAttribute("data-eager", "");
-    addPhoto(el, P[key]);
-  });
+  // Grandes photos fixes (chauffeur, réservation, fondateur).
+  $all("[data-photo]").forEach(function (el) { addPhoto(el, P[el.getAttribute("data-photo")]); });
 
   // Sélecteur de langue (en-tête et pied de page).
   var langBox = $("#lang");
@@ -656,12 +823,13 @@
     if (!e.target.closest("#lang")) closeLang();
   });
 
-  // Filtres de la flotte, et bouton « Réserver ce modèle » qui présélectionne le véhicule.
+  // Filtres de la flotte (synchronisés avec le showroom 3D), et « Réserver ce modèle ».
   $("#fleet-filters").addEventListener("click", function (e) {
     var b = e.target.closest(".chip");
     if (!b) return;
     fleetFilter = b.getAttribute("data-filter");
     applyFleetFilter();
+    emit("ns:fleet", { cat: fleetFilter });
   });
   $("#fleet").addEventListener("click", function (e) {
     var a = e.target.closest("[data-car]");
@@ -670,6 +838,21 @@
     var service = $("#f-service");
     if (service.value === "concierge" || service.value === "other") service.value = "rent";
   });
+  $("#paints").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-paint]");
+    if (!b) return;
+    paint = b.getAttribute("data-paint");
+    $all("#paints .paint").forEach(function (p) { p.setAttribute("aria-pressed", p === b ? "true" : "false"); });
+    emit("ns:paint", { id: paint });
+  });
+  // Le showroom 3D annonce la silhouette affichée.
+  document.addEventListener("ns:style", function (e) {
+    if (!e.detail || !e.detail.style) return;
+    showroomStyle = e.detail.style;
+    renderShowroomLabel();
+  });
+  document.addEventListener("ns:3d", function () { root.classList.remove("no-3d"); });
+  setTimeout(function () { if (!root.classList.contains("has-3d")) root.classList.add("no-3d"); }, 6000);
 
   // Bandeau « version provisoire » : un clic le masque.
   $("#draft-banner").addEventListener("click", function () { this.remove(); });
@@ -704,9 +887,30 @@
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { setMenu(false); closeLang(); }
   });
-  var desktop = window.matchMedia("(min-width: 1081px)");
+  var desktop = window.matchMedia("(min-width: 1181px)");
   function onDesktop(e) { if (e.matches) setMenu(false); }
   if (desktop.addEventListener) desktop.addEventListener("change", onDesktop); else desktop.addListener(onDesktop);
+
+  // ---------- Galerie horizontale des jets et yachts (épinglée pendant le défilement) ----------
+  var hs = $("#hscroll"), hsTrack = $("#hscroll-track"), hsBar = $("#hscroll-bar");
+  var hsPinned = false, hsDistance = 0;
+  function layoutHScroll() {
+    hsPinned = !REDUCE && window.matchMedia("(min-width: 900px)").matches;
+    hs.classList.toggle("is-pinned", hsPinned);
+    if (!hsPinned) { hs.style.height = ""; hsTrack.style.transform = ""; return; }
+    hsDistance = Math.max(0, hsTrack.scrollWidth - window.innerWidth);
+    hs.style.height = (hsDistance + window.innerHeight) + "px";
+    updateHScroll();
+  }
+  function updateHScroll() {
+    if (!hsPinned) return;
+    var r = hs.getBoundingClientRect();
+    var p = Math.min(1, Math.max(0, -r.top / Math.max(1, hsDistance)));
+    var rtl = root.dir === "rtl";
+    hsTrack.style.transform = "translate3d(" + ((rtl ? 1 : -1) * p * hsDistance).toFixed(1) + "px,0,0)";
+    if (hsBar) hsBar.style.transform = "scaleX(" + p.toFixed(4) + ")";
+  }
+  window.addEventListener("resize", layoutHScroll);
 
   // ---------- En-tête : transparent sur l'accueil, se retire en descendant, filet de progression ----------
   var lastY = window.scrollY;
@@ -723,19 +927,107 @@
     }
     var max = document.documentElement.scrollHeight - window.innerHeight;
     header.style.setProperty("--progress", max > 0 ? Math.min(1, y / max).toFixed(4) : "0");
+    updateHScroll();
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   header.addEventListener("focusin", function () { header.classList.remove("is-hidden"); });
+
+  // ---------- Compteurs : démarrent quand les chiffres apparaissent ----------
+  if ("IntersectionObserver" in window && !REDUCE) {
+    new IntersectionObserver(function (en, obs) {
+      if (en[0].isIntersecting) { countUp(); obs.disconnect(); }
+    }, { threshold: 0.4 }).observe($("#stats"));
+  } else statsDone = true;
+
+  // ---------- Effets réservés à la souris : curseur doré, cartes inclinables, boutons aimantés ----------
+  if (FINE && !REDUCE) {
+    root.classList.add("has-cursor");
+    var cursor = $("#cursor"), label = $("#cursor-label");
+    var mx = -100, my = -100, cx = -100, cy = -100;
+    window.addEventListener("pointermove", function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
+    (function loop() {
+      cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18;
+      cursor.style.transform = "translate3d(" + cx.toFixed(1) + "px," + cy.toFixed(1) + "px,0)";
+      requestAnimationFrame(loop);
+    })();
+    document.addEventListener("pointerover", function (e) {
+      var drag = e.target.closest("[data-cursor='drag']");
+      var hot = e.target.closest("a, button, select, input, textarea, label, [data-tilt]");
+      cursor.classList.toggle("is-hot", !!hot && !drag);
+      cursor.classList.toggle("is-drag", !!drag);
+      label.textContent = drag ? t("ui.drag") : "";
+    });
+    document.addEventListener("pointerleave", function () { mx = my = -100; });
+
+    // Inclinaison en 3D des cartes, avec reflet qui suit la souris.
+    document.addEventListener("pointermove", function (e) {
+      var card = e.target.closest("[data-tilt]");
+      if (!card) return;
+      var r = card.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      card.style.setProperty("--rx", ((0.5 - py) * 8).toFixed(2) + "deg");
+      card.style.setProperty("--ry", ((px - 0.5) * 10).toFixed(2) + "deg");
+      card.style.setProperty("--gx", (px * 100).toFixed(1) + "%");
+      card.style.setProperty("--gy", (py * 100).toFixed(1) + "%");
+      card.classList.add("is-tilting");
+    }, { passive: true });
+    document.addEventListener("pointerout", function (e) {
+      var card = e.target.closest("[data-tilt]");
+      if (card && !card.contains(e.relatedTarget)) {
+        card.classList.remove("is-tilting");
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+      }
+    });
+
+    // Boutons aimantés : ils suivent légèrement la souris.
+    document.addEventListener("pointermove", function (e) {
+      var m = e.target.closest(".magnetic");
+      $all(".magnetic.is-pulled").forEach(function (b) {
+        if (b !== m) { b.classList.remove("is-pulled"); b.style.transform = ""; }
+      });
+      if (!m) return;
+      var r = m.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      m.classList.add("is-pulled");
+      m.style.transform = "translate(" + (dx * 0.18).toFixed(1) + "px," + (dy * 0.3).toFixed(1) + "px)";
+    }, { passive: true });
+  }
+
+  // ---------- Ouverture animée, une fois par session ----------
+  function introDone() {
+    if (root.classList.contains("intro-done")) return;
+    root.classList.add("intro-done");
+    $all(".hero .split, .hero .eyebrow").forEach(function (el) { el.classList.add("is-visible"); });
+    emit("ns:intro");
+  }
+  (function runIntro() {
+    var intro = $("#intro");
+    if (REDUCE || storage("ns-intro", undefined, true)) {
+      if (intro) intro.remove();
+      introDone();
+      return;
+    }
+    storage("ns-intro", "1", true);
+    root.classList.add("intro-run");
+    setTimeout(function () {
+      intro.classList.add("is-leaving");
+      introDone();
+      setTimeout(function () { intro.remove(); root.classList.remove("intro-run"); }, 1100);
+    }, 2100);
+  })();
 
   // ---------- Démarrage ----------
   initBookingForm();
   setLang(pickLang());
   onScroll();
+  window.addEventListener("load", layoutHScroll);
   window.requestAnimationFrame(function () { document.body.classList.add("is-loaded"); });
+  if (!REDUCE) setInterval(function () { rotatorIndex++; showRotator(false); }, 2800);
 
   // Parallaxe discret des grandes images (ordinateur uniquement).
   if (!REDUCE && window.matchMedia("(hover: hover) and (min-width: 761px)").matches) {
-    var layers = $all(".parallax, .hero-media");
+    var layers = $all(".parallax");
     var ticking = false;
     var updateParallax = function () {
       ticking = false;
