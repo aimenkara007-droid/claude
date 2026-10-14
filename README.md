@@ -68,4 +68,11 @@ Cualquier hosting estático sirve, por ejemplo:
 
 Después se apunta el dominio `salonjolievue.com` al hosting, desde el panel del registrador del dominio.
 
+La versión actual es una **demo** (https://timely-granita-21127d.netlify.app). Para la puesta en línea definitiva hay que hacer cuatro cambios:
+
+1. En `index.html`, borrar la línea `<meta name="robots" content="noindex, nofollow">`. Mientras esté, Google no indexa la web.
+2. En `index.html`, cambiar `og:image` a `https://salonjolievue.com/images/accueil.jpg`. Esa imagen es la que sale en el aperçu al compartir el enlace por WhatsApp o Instagram.
+3. En `js/content.js`, poner `brouillon: false`. Así desaparece el banner «Proposition… maquette de démonstration».
+4. Para actualizar la demo, arrastrar la carpeta a la pestaña **Deploys** del sitio en Netlify.
+
 **Importante:** el salón usa el email `resa@salonjolievue.com`. Al cambiar los DNS, los registros **MX** (y TXT/SPF) del dominio tienen que quedarse como están. Si se tocan, el email deja de funcionar. Solo se modifican los registros A/CNAME de la web.
