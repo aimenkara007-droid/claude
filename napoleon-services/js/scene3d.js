@@ -1132,7 +1132,8 @@
       trailGeo.setAttribute("position", new THREE.BufferAttribute(trail, 3));
       var trailPts = new THREE.Points(trailGeo, new THREE.PointsMaterial({ map: TEX.dust, color: 0xf3e2c0, size: 0.22, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }));
       scene.add(trailPts);
-      var prog = 0, section = canvas.closest("section") || canvas;
+      // Progression mesurée sur le ciel lui-même : la section entière contient aussi la longue galerie épinglée.
+      var prog = 0, sky = canvas.parentNode || canvas;
       cam.position.set(0, 0.6, 15);
       cam.lookAt(0, 0, 0);
       var tmp = new THREE.Vector3();
@@ -1144,7 +1145,7 @@
         span = 15 * Math.tan(cam.fov * Math.PI / 360) * (w / h) + 6;
       };
       st.update = function (dt, time) {
-        prog = lerp(prog, progressOf(section), 0.06);
+        prog = lerp(prog, progressOf(sky), 0.06);
         var p = REDUCE ? (portrait ? 0.55 : 0.66) : prog;
         var x = lerp(-span, span, p), y = Math.sin(p * Math.PI) * 1.2 + 1.3, z = Math.sin(p * Math.PI * 2) * 1.2;
         holder.position.set(x, y + Math.sin(time * 0.9) * 0.08, z);
